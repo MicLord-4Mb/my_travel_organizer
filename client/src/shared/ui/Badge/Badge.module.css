@@ -1,0 +1,99 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-micro);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  user-select: none;
+  transition: background-color var(--transition-fast);
+}
+
+/* Category Variants */
+.transport {
+  background-color: var(--color-category-transport-bg);
+  color: var(--color-category-transport-text);
+}
+
+.lodging {
+  background-color: var(--color-category-lodging-bg);
+  color: var(--color-category-lodging-text);
+}
+
+.activities {
+  background-color: var(--color-category-activities-bg);
+  color: var(--color-category-activities-text);
+}
+
+.dining {
+  background-color: var(--color-category-dining-bg);
+  color: var(--color-category-dining-text);
+}
+
+/* Status Variants */
+.active,
+.success {
+  background-color: var(--color-status-success-bg);
+  color: #059669;
+}
+
+.upcoming {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #2563EB;
+}
+
+.past {
+  background-color: var(--color-surface-container-low);
+  color: var(--color-text-secondary);
+}
+
+.danger {
+  background-color: var(--color-status-danger-bg);
+  color: var(--color-status-danger);
+}
+
+.neutral {
+  background-color: var(--color-canvas-bg);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+/* Glass overlay variant (used on trip card cover image) */
+.glass {
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: var(--color-text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.glass.active {
+  color: #059669;
+}
+
+.glass.upcoming {
+  color: #2563EB;
+}
+
+.glass.past {
+  color: var(--color-text-secondary);
+}
+
+/* Dot indicator */
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background-color: currentColor;
+  flex-shrink: 0;
+}
+
+.pulseDot {
+  animation: pulseSubtle 1.8s ease-in-out infinite;
+}

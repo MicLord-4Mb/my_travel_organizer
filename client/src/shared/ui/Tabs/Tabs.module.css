@@ -1,0 +1,86 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  user-select: none;
+  scrollbar-width: none;
+}
+
+.list::-webkit-scrollbar {
+  display: none;
+}
+
+/* Variant: Pills (Default in dashboard filter bar) */
+.list.pills {
+  padding: 4px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-level-1);
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  outline: none;
+}
+
+.trigger:hover:not([data-state='active']) {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-container-low);
+}
+
+.trigger[data-state='active'] {
+  color: var(--color-primary);
+  background-color: rgba(13, 148, 136, 0.1);
+  font-weight: 600;
+}
+
+/* Variant: Solid (Filled teal when active) */
+.list.solid .trigger[data-state='active'] {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+}
+
+/* Variant: Segmented */
+.list.segmented {
+  padding: 3px;
+  background-color: var(--color-surface-container-low);
+  border-radius: var(--radius-md);
+}
+
+.list.segmented .trigger[data-state='active'] {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-level-1);
+}
+
+/* Count badge inside tab */
+.countBadge {
+  font-size: var(--font-size-micro);
+  opacity: 0.85;
+}
+
+.content {
+  outline: none;
+  width: 100%;
+}

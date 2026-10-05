@@ -1,0 +1,88 @@
+.filtersContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+@media (min-width: 1024px) {
+  .row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.controlsCluster {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+@media (min-width: 640px) {
+  .controlsCluster {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.searchBox {
+  flex: 1;
+}
+
+@media (min-width: 640px) {
+  .searchBox {
+    width: 280px;
+    flex: none;
+  }
+}
+
+.sortBox {
+  min-width: 190px;
+}
+
+.viewToggle {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-level-1);
+  border: 1px solid var(--color-border-subtle);
+  height: 40px;
+}
+
+@media (min-width: 768px) {
+  .viewToggle {
+    display: flex;
+  }
+}
+
+.toggleBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  background: transparent;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.toggleBtn:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-container-low);
+}
+
+.toggleBtn.active {
+  color: var(--color-primary);
+  background-color: rgba(13, 148, 136, 0.1);
+}

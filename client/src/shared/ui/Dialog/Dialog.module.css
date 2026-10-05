@@ -1,0 +1,111 @@
+.overlay {
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  animation: overlayShow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.content {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-level-3);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: var(--space-lg);
+  z-index: 101;
+  border: 1px solid var(--color-border-subtle);
+  animation: contentShow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.content:focus {
+  outline: none;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.titleArea {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.title {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-header);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.description {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.closeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background-color: var(--color-surface-container-low);
+  color: var(--color-text-primary);
+}
+
+.body {
+  margin-bottom: var(--space-lg);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+@keyframes overlayShow {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes contentShow {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

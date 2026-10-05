@@ -1,0 +1,40 @@
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-level-1);
+  transition: all var(--transition-normal);
+  overflow: hidden;
+  position: relative;
+}
+
+.withPadding {
+  padding: var(--space-md);
+}
+
+.interactive {
+  cursor: pointer;
+}
+
+.interactive:hover,
+.hoverable:hover {
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-level-2);
+}
+
+/* Category Left Border Variants */
+.accentTransport {
+  border-left: 3px solid var(--color-category-transport);
+}
+
+.accentLodging {
+  border-left: 3px solid var(--color-category-lodging);
+}
+
+.accentActivities {
+  border-left: 3px solid var(--color-category-activities);
+}
+
+.accentDining {
+  border-left: 3px solid var(--color-category-dining);
+}

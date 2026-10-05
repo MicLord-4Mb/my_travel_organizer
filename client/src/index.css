@@ -1,0 +1,159 @@
+/* WanderFlow Design System - Nordic Travel Workspace Tokens */
+:root {
+  /* Surface & Base Colors */
+  --color-canvas-bg: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-surface-dim: #cbdbf5;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d3e4fe;
+
+  /* Typography Colors */
+  --color-text-primary: #1E293B;
+  --color-text-secondary: #64748B;
+  --color-text-muted: #94A3B8;
+
+  /* Borders & Dividers */
+  --color-border-subtle: #E2E8F0;
+  --color-border-hover: #CBD5E1;
+
+  /* Primary Brand (Teal) */
+  --color-primary: #0D9488;
+  --color-primary-hover: #0F766E;
+  --color-primary-active: #115E59;
+  --color-primary-light: rgba(13, 148, 136, 0.1);
+  --color-primary-focus: rgba(13, 148, 136, 0.2);
+
+  /* Semantic Category Accents */
+  --color-category-transport: #3B82F6;
+  --color-category-transport-bg: rgba(59, 130, 246, 0.1);
+  --color-category-transport-text: #2563EB;
+
+  --color-category-lodging: #8B5CF6;
+  --color-category-lodging-bg: rgba(139, 92, 246, 0.1);
+  --color-category-lodging-text: #7C3AED;
+
+  --color-category-activities: #10B981;
+  --color-category-activities-bg: rgba(16, 185, 129, 0.1);
+  --color-category-activities-text: #059669;
+
+  --color-category-dining: #F59E0B;
+  --color-category-dining-bg: rgba(245, 158, 11, 0.1);
+  --color-category-dining-text: #D97706;
+
+  /* Status Colors */
+  --color-status-danger: #EF4444;
+  --color-status-danger-hover: #DC2626;
+  --color-status-danger-bg: rgba(239, 68, 68, 0.1);
+  --color-status-success: #10B981;
+  --color-status-success-bg: rgba(16, 185, 129, 0.1);
+
+  /* Elevation Shadows */
+  --shadow-level-1: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  --shadow-level-2: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-level-3: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-dropdown: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  /* Border Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Spacing Tokens */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Typography */
+  --font-family-base: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-size-micro: 11px;
+  --font-size-caption: 12px;
+  --font-size-currency: 13px;
+  --font-size-body: 14px;
+  --font-size-header: 18px;
+  --font-size-title-sm: 20px;
+  --font-size-title: 24px;
+  --font-size-display: 30px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+}
+
+/* CSS Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-family-base);
+  background-color: var(--color-canvas-bg);
+  color: var(--color-text-primary);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--color-canvas-bg);
+  color: var(--color-text-primary);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Tabular Numerals Utility */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Utility Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
