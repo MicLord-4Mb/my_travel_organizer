@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview",
     "mock-api": "json-server --watch db.json --port 3001 --delay 400"
   },
@@ -38,6 +39,7 @@
     "@types/react-dom": "^19.2.7",
     "@types/redux-logger": "^3.0.13",
     "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^29.1.1",
     "json-server": "^0.17.4",
     "oxlint": "^1.81.0",
     "redux-logger": "^3.0.6",

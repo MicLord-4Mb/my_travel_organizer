@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import * as ToastPrimitive from '@radix-ui/react-toast';
 import { X } from 'lucide-react';
-import { ToastContext, type ToastMessage } from './ToastContext';
+import { ToastContext, type ToastMessage } from '@shared/ui';
 import styles from './Toast.module.css';
 
 /**
