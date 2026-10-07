@@ -1,0 +1,49 @@
+.canvasContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+  min-width: 0;
+}
+
+.timelineStream {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.verticalGuideLine {
+  position: absolute;
+  left: 26px;
+  top: 14px;
+  bottom: 24px;
+  width: 2px;
+  background: var(--color-surface-container-highest);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.emptyState {
+  padding: var(--space-xl) var(--space-md);
+  text-align: center;
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px dashed var(--color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-secondary);
+}
+
+.emptyTitle {
+  font-size: var(--font-size-header);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.emptyDescription {
+  font-size: var(--font-size-caption);
+  max-width: 320px;
+}

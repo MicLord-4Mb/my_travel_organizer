@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Dialog, Input, Select, Button } from '@shared/ui';
+import { Dialog, Input, Select, Button, useToast } from '@shared/ui';
 import type { Trip } from '@shared/types/models';
+import { useCurrency } from '@shared/lib/useCurrency';
 import { tripSchema, type TripFormData } from '../model/tripSchema';
 import styles from './TripFormModal.module.css';
 
@@ -25,13 +26,26 @@ const PRESET_COVERS = [
   },
 ];
 
+/**
+ * Props accepted by the `<TripFormModal />` dialog.
+ */
 export interface TripFormModalProps {
+  /** Controls modal visibility */
   open: boolean;
+  /** Callback fired when modal visibility toggles */
   onOpenChange: (open: boolean) => void;
+  /** Existing trip object if in editing mode, or null/undefined if creating a new trip */
   tripToEdit?: Trip | null;
+  /** Asynchronous or synchronous submit handler triggered with valid form payload */
   onSubmit: (data: TripFormData) => Promise<void> | void;
 }
 
+/**
+ * Modal dialog for creating new trips or editing existing trip properties.
+ *
+ * Integrates React Hook Form with Zod validation, cover image presets,
+ * and Radix UI Toast notifications for error feedback.
+ */
 export const TripFormModal: React.FC<TripFormModalProps> = ({
   open,
   onOpenChange,
@@ -39,6 +53,14 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
   onSubmit,
 }) => {
   const isEditing = Boolean(tripToEdit);
+  const { toast } = useToast();
+  const {
+    currencies,
+    baseCurrency,
+    isCurrenciesLoading,
+    isCurrenciesError,
+    refetchCurrencies,
+  } = useCurrency();
 
   const {
     register,
@@ -48,7 +70,7 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
     reset,
     formState: { errors, isSubmitting },
   } = useForm<TripFormData>({
-    resolver: zodResolver(tripSchema),
+    resolver: zodResolver(tripSchema) as any,
     defaultValues: {
       title: '',
       description: '',
@@ -57,7 +79,7 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
       endDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
       status: 'planned',
       budgetLimit: 2000,
-      currency: 'USD',
+      currency: baseCurrency || 'USD',
       coverImageUrl: PRESET_COVERS[0].url,
     },
   });
@@ -75,7 +97,7 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
           endDate: tripToEdit.endDate,
           status: tripToEdit.status,
           budgetLimit: tripToEdit.budgetLimit || 0,
-          currency: tripToEdit.currency || 'USD',
+          currency: tripToEdit.currency || baseCurrency || 'USD',
           coverImageUrl: tripToEdit.coverImageUrl || PRESET_COVERS[0].url,
         });
       } else {
@@ -87,16 +109,29 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
           endDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
           status: 'planned',
           budgetLimit: 2000,
-          currency: 'USD',
+          currency: baseCurrency || 'USD',
           coverImageUrl: PRESET_COVERS[0].url,
         });
       }
     }
-  }, [open, tripToEdit, reset]);
+  }, [open, tripToEdit, baseCurrency, reset]);
 
   const handleFormSubmit = async (data: TripFormData) => {
-    await onSubmit(data);
-    onOpenChange(false);
+    try {
+      await onSubmit(data);
+      onOpenChange(false);
+      toast({
+        title: 'Success',
+        description: isEditing ? 'Trip updated successfully' : 'Trip created successfully',
+        variant: 'success'
+      });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to save trip',
+        variant: 'destructive'
+      });
+    }
   };
 
   return (
@@ -173,18 +208,36 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
             error={errors.budgetLimit?.message}
             {...register('budgetLimit', { valueAsNumber: true })}
           />
-          <Select
-            label="Currency"
-            error={errors.currency?.message}
-            options={[
-              { value: 'USD', label: 'USD ($)' },
-              { value: 'EUR', label: 'EUR (€)' },
-              { value: 'GBP', label: 'GBP (£)' },
-              { value: 'JPY', label: 'JPY (¥)' },
-              { value: 'ILS', label: 'ILS (₪)' },
-            ]}
-            {...register('currency')}
-          />
+          <div className={styles.currencyFieldWrapper}>
+            <Select
+              label="Currency"
+              disabled={isCurrenciesLoading}
+              error={
+                errors.currency?.message ||
+                (isCurrenciesError ? 'Failed to load currencies from API' : undefined)
+              }
+              options={
+                isCurrenciesLoading
+                  ? [{ value: '', label: 'Loading currencies...' }]
+                  : currencies.length > 0
+                  ? currencies.map((c) => ({
+                      value: c.code,
+                      label: `${c.code} (${c.symbol}) - ${c.name}`,
+                    }))
+                  : [{ value: '', label: 'No currencies available' }]
+              }
+              {...register('currency')}
+            />
+            {isCurrenciesError && (
+              <button
+                type="button"
+                className={styles.retryBtn}
+                onClick={() => refetchCurrencies()}
+              >
+                Retry loading currencies
+              </button>
+            )}
+          </div>
         </div>
 
         <div className={styles.coverPicker}>
@@ -196,9 +249,8 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
               <button
                 key={preset.url}
                 type="button"
-                className={`${styles.thumbnailBtn} ${
-                  selectedCover === preset.url ? styles.selected : ''
-                }`}
+                className={`${styles.thumbnailBtn} ${selectedCover === preset.url ? styles.selected : ''
+                  }`}
                 onClick={() => setValue('coverImageUrl', preset.url)}
               >
                 <img
@@ -215,7 +267,7 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
             placeholder="https://..."
             error={errors.coverImageUrl?.message}
             {...register('coverImageUrl')}
-            containerClassName="mt-2"
+            containerClassName={styles.customCoverField}
           />
         </div>
 
@@ -232,8 +284,8 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
             {isSubmitting
               ? 'Saving...'
               : isEditing
-              ? 'Save Changes'
-              : 'Create Journey'}
+                ? 'Save Changes'
+                : 'Create Journey'}
           </Button>
         </div>
       </form>

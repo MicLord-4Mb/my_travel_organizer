@@ -1,0 +1,363 @@
+.inspectorAside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .inspectorAside {
+    position: sticky;
+    top: 130px;
+  }
+}
+
+.mapCard {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-level-1);
+  border: 1px solid var(--color-border-subtle);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.mapHeader {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.mapTitleGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.mapTitle {
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mapSubtitle {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.modeSwitch {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--color-surface-container-low);
+  padding: 3px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.modeBtn {
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.modeBtn:hover {
+  color: var(--color-text-primary);
+}
+
+.modeBtnActive {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.mapView {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  background: #eef2f6;
+  overflow: hidden;
+  user-select: none;
+}
+
+.mapCanvasBg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: transform 300ms ease;
+}
+
+.mapSvgPolyline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.mapMarker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+  z-index: 10;
+}
+
+.mapMarker:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+  z-index: 20;
+}
+
+.mapMarkerSelected {
+  transform: translate(-50%, -50%) scale(1.15);
+  z-index: 25;
+}
+
+.markerPin {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  color: #ffffff;
+  font-size: var(--font-size-micro);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-level-2);
+  border: 2px solid #ffffff;
+  transition: all var(--transition-fast);
+}
+
+.markerPinSelected {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px var(--color-primary), var(--shadow-level-3);
+}
+
+.markerLabel {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  margin-top: 3px;
+  white-space: nowrap;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.zoomControls {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-level-2);
+  border: 1px solid var(--color-border-subtle);
+  overflow: hidden;
+  z-index: 20;
+}
+
+.zoomBtn {
+  padding: 6px;
+  color: var(--color-text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast);
+  cursor: pointer;
+}
+
+.zoomBtn:hover {
+  background: var(--color-surface-container-low);
+}
+
+.zoomDivider {
+  height: 1px;
+  background: var(--color-border-subtle);
+}
+
+.transitInsightBanner {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 6px 12px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-level-1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-micro);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-subtle);
+  z-index: 20;
+}
+
+.bannerIcon {
+  color: var(--color-primary);
+}
+
+.sequenceSheet {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--color-surface);
+}
+
+.sequenceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sequenceTitle {
+  font-size: var(--font-size-micro);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+}
+
+.optimizeBtn {
+  font-size: var(--font-size-micro);
+  color: var(--color-primary);
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.optimizeBtn:hover {
+  text-decoration: underline;
+}
+
+.waypointsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.waypointItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-container-low);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.waypointItem:hover {
+  background: var(--color-surface-container);
+}
+
+.waypointItemSelected {
+  background: var(--color-surface-container-highest);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.waypointLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.waypointNum {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.waypointName {
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.waypointTime {
+  font-size: var(--font-size-micro);
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.weatherWidget {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-container-low);
+  border: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.weatherLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.weatherInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.weatherHeadline {
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.weatherSub {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.weatherBadge {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-primary);
+  border: 1px solid var(--color-border-subtle);
+}

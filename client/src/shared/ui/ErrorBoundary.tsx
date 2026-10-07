@@ -1,26 +1,56 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { logger } from '@shared/lib/logger';
 
+/**
+ * Props for `<ErrorBoundary>`.
+ */
 interface Props {
+  /** React child tree monitored for unhandled render-phase errors */
   children: ReactNode;
+  /** Optional custom fallback component to display when an error occurs */
   fallback?: ReactNode;
 }
 
+/**
+ * Internal state for `<ErrorBoundary>`.
+ */
 interface State {
+  /** Flag indicating whether a child component crashed */
   hasError: boolean;
+  /** Caught error reference, or null when healthy */
   error: Error | null;
 }
 
+/**
+ * Application-Level React Error Boundary.
+ *
+ * Traps runtime errors thrown during component rendering, lifecycle methods,
+ * and constructor calls within child component subtrees.
+ * - Forwards error stack traces and component stack trees to `logger.error`.
+ * - Prevents entire page blanking by rendering a graceful fallback UI.
+ */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
+  /**
+   * Updates state so the next render will show the fallback UI.
+   *
+   * @param {Error} error - The caught runtime exception.
+   * @returns {State} New state with `hasError: true`.
+   */
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
+  /**
+   * Logs component stack details to the centralized application telemetry.
+   *
+   * @param {Error} error - The thrown exception.
+   * @param {ErrorInfo} errorInfo - React component tree call stack.
+   */
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     logger.error('React component crash caught by ErrorBoundary', {
       message: error.message,
@@ -29,6 +59,9 @@ export class ErrorBoundary extends Component<Props, State> {
     });
   }
 
+  /**
+   * Reloads the current window to attempt state recovery.
+   */
   handleReload = (): void => {
     window.location.reload();
   };
@@ -60,7 +93,7 @@ export class ErrorBoundary extends Component<Props, State> {
             onClick={this.handleReload}
             style={{
               padding: '0.6rem 1.2rem',
-              backgroundColor: '#2563eb',
+              backgroundColor: '#0D9488',
               color: '#ffffff',
               border: 'none',
               borderRadius: '0.375rem',

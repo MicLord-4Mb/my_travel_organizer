@@ -22,6 +22,27 @@
   gap: var(--space-xs);
 }
 
+.customCoverField {
+  margin-top: var(--space-xs);
+}
+
+.currencyFieldWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.retryBtn {
+  background: none;
+  border: none;
+  color: var(--color-status-danger);
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  text-align: left;
+}
+
 .coverThumbnails {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

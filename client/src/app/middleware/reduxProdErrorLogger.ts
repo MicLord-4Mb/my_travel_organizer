@@ -2,8 +2,15 @@ import type { Middleware } from '@reduxjs/toolkit';
 import { logger } from '@shared/lib/logger';
 
 /**
- * Production middleware for Redux:
- * Intercepts uncaught exceptions and rejected async actions, reporting them to the production logger.
+ * Redux Production Error Logger Middleware.
+ *
+ * Monitors state mutations and action dispatches in production environments.
+ * Specifically:
+ * - Catches synchronous errors thrown during reducer execution or downstream middleware.
+ * - Detects RTK async thunk actions that end with `/rejected` and logs their error details and payloads.
+ * - Forwards errors to the centralized `logger` utility for remote telemetry collection.
+ *
+ * @type {Middleware}
  */
 export const reduxProdErrorLogger: Middleware = () => (next) => (action) => {
   try {

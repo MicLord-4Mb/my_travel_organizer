@@ -1,0 +1,50 @@
+.root {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-surface-container);
+  border: 1.5px solid var(--color-border-hover);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  flex-shrink: 0;
+  outline: none;
+  padding: 0;
+}
+
+.root:hover:not([data-disabled]) {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface-container-high);
+}
+
+.root:focus-visible {
+  outline: 2px solid var(--color-primary-focus);
+  outline-offset: 2px;
+}
+
+.root[data-state='checked'] {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #FFFFFF;
+}
+
+.indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  animation: checkPop 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes checkPop {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

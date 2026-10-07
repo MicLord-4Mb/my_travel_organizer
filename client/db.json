@@ -1,0 +1,825 @@
+{
+  "trips": [
+    {
+      "id": "mock-trip-1",
+      "title": "Tokyo Autumn Expedition",
+      "description": "9 Days • High-speed Shinkansen, culinary discovery & boutique stay",
+      "startDate": "2026-10-12",
+      "endDate": "2026-10-20",
+      "coverImageUrl": "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80",
+      "status": "in_progress",
+      "location": "Tokyo, Japan",
+      "budgetLimit": 2500,
+      "spentBudget": 1820.5,
+      "packedCount": 10,
+      "totalChecklistCount": 15,
+      "currency": "USD",
+      "categoryBudgets": {
+        "transport": 900,
+        "lodging": 700,
+        "dining": 500,
+        "activities": 400
+      },
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "mock-trip-2",
+      "title": "Alpine Winter Ski Expedition",
+      "description": "7 Days • Backcountry tour & ski equipment rentals",
+      "startDate": "2026-12-15",
+      "endDate": "2026-12-22",
+      "coverImageUrl": "https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=1200&q=80",
+      "status": "planned",
+      "location": "Zermatt, Switzerland",
+      "budgetLimit": 4500,
+      "spentBudget": 3100,
+      "packedCount": 2,
+      "totalChecklistCount": 15,
+      "currency": "USD",
+      "categoryBudgets": {
+        "transport": 1200,
+        "lodging": 1800,
+        "dining": 800,
+        "activities": 700
+      },
+      "createdAt": "2026-09-10T00:00:00.000Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "mock-trip-3",
+      "title": "Amalfi Coastline & Capri Ferry",
+      "description": "9 Days • Coastal road exploration & Capri grotto pass",
+      "startDate": "2027-04-10",
+      "endDate": "2027-04-18",
+      "coverImageUrl": "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=80",
+      "status": "planned",
+      "location": "Positano, Italy",
+      "budgetLimit": 3200,
+      "spentBudget": 850,
+      "packedCount": 0,
+      "totalChecklistCount": 10,
+      "currency": "USD",
+      "categoryBudgets": {
+        "transport": 1000,
+        "lodging": 1200,
+        "dining": 600,
+        "activities": 400
+      },
+      "createdAt": "2026-09-15T00:00:00.000Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "mock-trip-4",
+      "title": "Norwegian Fjords Expedition",
+      "description": "10 Days • Roadtrip & scenic ferry navigation",
+      "startDate": "2025-08-04",
+      "endDate": "2025-08-14",
+      "coverImageUrl": "https://images.unsplash.com/photo-1507272931001-fc06c17e4f43?auto=format&fit=crop&w=1200&q=80",
+      "status": "completed",
+      "location": "Bergen, Norway",
+      "budgetLimit": 3800,
+      "spentBudget": 3740,
+      "packedCount": 24,
+      "totalChecklistCount": 24,
+      "currency": "USD",
+      "categoryBudgets": {
+        "transport": 1400,
+        "lodging": 1300,
+        "dining": 700,
+        "activities": 400
+      },
+      "createdAt": "2025-07-01T00:00:00.000Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    }
+  ],
+  "events": [
+    {
+      "id": "mock-event-d1-1",
+      "tripId": "mock-trip-1",
+      "dayIndex": 0,
+      "order": 0,
+      "title": "Check-in at Hotel Gracery Shinjuku",
+      "category": "lodging",
+      "startTime": "14:00",
+      "endTime": "15:00",
+      "cost": 165,
+      "currency": "USD",
+      "location": {
+        "name": "1-19-1 Kabukicho, Shinjuku",
+        "address": "Shinjuku, Tokyo 160-0021",
+        "lat": 35.6953,
+        "lng": 139.702
+      },
+      "notes": "Ref #HG-890211 • 8th Fl Terrace Godzilla",
+      "bookingRef": "HG-890211",
+      "createdAt": "2026-10-12T14:00:00.000Z",
+      "updatedAt": "2026-10-07T20:47:06.691Z"
+    },
+    {
+      "id": "mock-event-d1-2",
+      "tripId": "mock-trip-1",
+      "dayIndex": 0,
+      "order": 2,
+      "title": "Shinjuku Omoide Yokocho Walk",
+      "category": "activities",
+      "startTime": "17:30",
+      "endTime": "19:00",
+      "cost": 0,
+      "currency": "USD",
+      "location": {
+        "name": "1-2 Nishishinjuku, Tokyo",
+        "address": "Nishi-Shinjuku, Tokyo",
+        "lat": 35.6928,
+        "lng": 139.6997
+      },
+      "notes": "Explore neon-lit alleyways & photography",
+      "createdAt": "2026-10-12T17:30:00.000Z",
+      "updatedAt": "2026-10-07T20:47:06.691Z"
+    },
+    {
+      "id": "mock-event-d1-3",
+      "tripId": "mock-trip-1",
+      "dayIndex": 0,
+      "order": 1,
+      "title": "Roppongi Robata & Sake Bar",
+      "category": "dining",
+      "startTime": "20:00",
+      "endTime": "22:00",
+      "cost": 85,
+      "currency": "USD",
+      "location": {
+        "name": "Roppongi Hills, Minato",
+        "address": "Roppongi, Tokyo",
+        "lat": 35.6628,
+        "lng": 139.7291
+      },
+      "notes": "Charcoal grill seasonal omakase",
+      "createdAt": "2026-10-12T20:00:00.000Z",
+      "updatedAt": "2026-10-07T20:47:06.691Z"
+    },
+    {
+      "id": "mock-event-1",
+      "tripId": "mock-trip-1",
+      "dayIndex": 1,
+      "order": 0,
+      "title": "Breakfast at Bills Omotesando",
+      "category": "dining",
+      "startTime": "08:30",
+      "endTime": "09:45",
+      "cost": 24,
+      "currency": "USD",
+      "location": {
+        "name": "Jingumae, Shibuya",
+        "address": "4-30-3 Jingumae, Shibuya, Tokyo",
+        "lat": 35.6672,
+        "lng": 139.7061
+      },
+      "notes": "Reserved table for 2 • Famous ricotta hotcakes",
+      "bookingRef": "RES-BILLS-92",
+      "createdAt": "2026-10-13T08:30:00.000Z",
+      "updatedAt": "2026-10-13T08:30:00.000Z"
+    },
+    {
+      "id": "mock-event-2",
+      "tripId": "mock-trip-1",
+      "dayIndex": 1,
+      "order": 1,
+      "title": "Meiji Jingu Shrine Walking Tour",
+      "category": "activities",
+      "startTime": "10:00",
+      "endTime": "12:30",
+      "cost": 0,
+      "currency": "USD",
+      "location": {
+        "name": "1-1 Yoyogikamizonocho",
+        "address": "Yoyogikamizonocho, Shibuya, Tokyo",
+        "lat": 35.6764,
+        "lng": 139.6993
+      },
+      "notes": "Bring comfortable walking shoes • Sake barrels photo spot",
+      "createdAt": "2026-10-13T10:00:00.000Z",
+      "updatedAt": "2026-10-13T10:00:00.000Z"
+    },
+    {
+      "id": "mock-event-3",
+      "tripId": "mock-trip-1",
+      "dayIndex": 1,
+      "order": 2,
+      "title": "Ichiran Ramen Lunch",
+      "category": "dining",
+      "startTime": "13:15",
+      "endTime": "14:30",
+      "cost": 18.5,
+      "currency": "USD",
+      "location": {
+        "name": "Shibuya 1-22-7",
+        "address": "1-22-7 Jinnan, Shibuya, Tokyo",
+        "lat": 35.6618,
+        "lng": 139.7005
+      },
+      "notes": "Expect 20 min solo booth queue • Tonkotsu extra chashu",
+      "createdAt": "2026-10-13T13:15:00.000Z",
+      "updatedAt": "2026-10-13T13:15:00.000Z"
+    },
+    {
+      "id": "mock-event-4",
+      "tripId": "mock-trip-1",
+      "dayIndex": 1,
+      "order": 3,
+      "title": "Yamanote Line Transit to Shibuya Sky",
+      "category": "transport",
+      "startTime": "15:30",
+      "endTime": "16:15",
+      "cost": 3.5,
+      "currency": "USD",
+      "location": {
+        "name": "Harajuku → Shibuya Station",
+        "address": "Shibuya Station, Tokyo",
+        "lat": 35.658,
+        "lng": 139.7016
+      },
+      "notes": "Suica card tapped • Platform 2 inner loop",
+      "createdAt": "2026-10-13T15:30:00.000Z",
+      "updatedAt": "2026-10-13T15:30:00.000Z"
+    },
+    {
+      "id": "mock-event-5",
+      "tripId": "mock-trip-1",
+      "dayIndex": 1,
+      "order": 4,
+      "title": "Shibuya Sky Observatory Sunset",
+      "category": "activities",
+      "startTime": "17:00",
+      "endTime": "19:00",
+      "cost": 18,
+      "currency": "USD",
+      "location": {
+        "name": "Scramble Square, Shibuya",
+        "address": "2-24-12 Shibuya, Tokyo",
+        "lat": 35.6585,
+        "lng": 139.7023
+      },
+      "notes": "Ticket QR ready (Slot 17:00-17:20) • Sunset golden hour",
+      "bookingRef": "QR-SKY-771",
+      "createdAt": "2026-10-13T17:00:00.000Z",
+      "updatedAt": "2026-10-13T17:00:00.000Z"
+    },
+    {
+      "id": "mock-event-6",
+      "tripId": "mock-trip-1",
+      "dayIndex": 1,
+      "order": 5,
+      "title": "Check-in at Hotel Gracery Shinjuku",
+      "category": "lodging",
+      "startTime": "20:00",
+      "endTime": "21:00",
+      "cost": 165,
+      "currency": "USD",
+      "location": {
+        "name": "1-19-1 Kabukicho, Shinjuku",
+        "address": "Shinjuku, Tokyo 160-0021",
+        "lat": 35.6953,
+        "lng": 139.702
+      },
+      "notes": "Ref #HG-890211 • 8th Fl Terrace Godzilla",
+      "bookingRef": "HG-890211",
+      "createdAt": "2026-10-13T20:00:00.000Z",
+      "updatedAt": "2026-10-13T20:00:00.000Z"
+    },
+    {
+      "id": "mock-event-d3-1",
+      "tripId": "mock-trip-1",
+      "dayIndex": 2,
+      "order": 0,
+      "title": "Senso-ji Temple & Nakamise Street",
+      "category": "activities",
+      "startTime": "09:30",
+      "endTime": "11:45",
+      "cost": 0,
+      "currency": "USD",
+      "location": {
+        "name": "Asakusa, Taito",
+        "address": "2-3-1 Asakusa, Taito, Tokyo",
+        "lat": 35.7148,
+        "lng": 139.7967
+      },
+      "notes": "Historical pagoda and traditional street food",
+      "createdAt": "2026-10-14T09:30:00.000Z",
+      "updatedAt": "2026-10-14T09:30:00.000Z"
+    },
+    {
+      "id": "mock-event-d3-2",
+      "tripId": "mock-trip-1",
+      "dayIndex": 2,
+      "order": 1,
+      "title": "Asakusa Sukiyaki Lunch",
+      "category": "dining",
+      "startTime": "12:30",
+      "endTime": "14:00",
+      "cost": 45,
+      "currency": "USD",
+      "location": {
+        "name": "Nishi-Asakusa",
+        "address": "Nishi-Asakusa, Taito, Tokyo",
+        "lat": 35.7132,
+        "lng": 139.7915
+      },
+      "notes": "Wagyu beef sukiyaki set",
+      "createdAt": "2026-10-14T12:30:00.000Z",
+      "updatedAt": "2026-10-14T12:30:00.000Z"
+    },
+    {
+      "id": "mock-event-d3-3",
+      "tripId": "mock-trip-1",
+      "dayIndex": 2,
+      "order": 2,
+      "title": "Akihabara Retro Gaming & Arcades",
+      "category": "activities",
+      "startTime": "15:00",
+      "endTime": "18:00",
+      "cost": 25,
+      "currency": "USD",
+      "location": {
+        "name": "Sotokanda, Chiyoda",
+        "address": "Sotokanda, Chiyoda, Tokyo",
+        "lat": 35.6997,
+        "lng": 139.7714
+      },
+      "notes": "Super Potato & Mandarake Complex",
+      "createdAt": "2026-10-14T15:00:00.000Z",
+      "updatedAt": "2026-10-14T15:00:00.000Z"
+    },
+    {
+      "id": "mock-event-d4-1",
+      "tripId": "mock-trip-1",
+      "dayIndex": 3,
+      "order": 0,
+      "title": "Romancecar Train to Hakone",
+      "category": "transport",
+      "startTime": "08:00",
+      "endTime": "09:30",
+      "cost": 28,
+      "currency": "USD",
+      "location": {
+        "name": "Shinjuku Station",
+        "address": "Shinjuku Station Odakyu Line",
+        "lat": 35.6896,
+        "lng": 139.7006
+      },
+      "notes": "Observation deck car reserved",
+      "createdAt": "2026-10-15T08:00:00.000Z",
+      "updatedAt": "2026-10-15T08:00:00.000Z"
+    },
+    {
+      "id": "mock-event-d4-2",
+      "tripId": "mock-trip-1",
+      "dayIndex": 3,
+      "order": 1,
+      "title": "Lake Ashi Sightseeing Cruise",
+      "category": "activities",
+      "startTime": "11:30",
+      "endTime": "13:00",
+      "cost": 18,
+      "currency": "USD",
+      "location": {
+        "name": "Hakone-machi, Ashigarashimo",
+        "address": "Lake Ashi, Hakone",
+        "lat": 35.2045,
+        "lng": 139.0234
+      },
+      "notes": "Mount Fuji views from the upper deck",
+      "createdAt": "2026-10-15T11:30:00.000Z",
+      "updatedAt": "2026-10-15T11:30:00.000Z"
+    },
+    {
+      "id": "mock-event-d4-3",
+      "tripId": "mock-trip-1",
+      "dayIndex": 3,
+      "order": 2,
+      "title": "Onsen Ryokan Stay & Kaiseki",
+      "category": "lodging",
+      "startTime": "18:00",
+      "endTime": "21:00",
+      "cost": 220,
+      "currency": "USD",
+      "location": {
+        "name": "Hakone Yumoto",
+        "address": "Yumoto, Hakone",
+        "lat": 35.2318,
+        "lng": 139.1039
+      },
+      "notes": "Private outdoor onsen bath included",
+      "createdAt": "2026-10-15T18:00:00.000Z",
+      "updatedAt": "2026-10-15T18:00:00.000Z"
+    },
+    {
+      "id": "mock-event-d5-1",
+      "tripId": "mock-trip-1",
+      "dayIndex": 4,
+      "order": 0,
+      "title": "Tsukiji Outer Market Food Tour",
+      "category": "dining",
+      "startTime": "07:30",
+      "endTime": "09:30",
+      "cost": 35,
+      "currency": "USD",
+      "location": {
+        "name": "Tsukiji, Chuo",
+        "address": "4 Chome Tsukiji, Chuo, Tokyo",
+        "lat": 35.6655,
+        "lng": 139.7708
+      },
+      "notes": "Fresh tuna sashimi, tamagoyaki, matcha latte",
+      "createdAt": "2026-10-16T07:30:00.000Z",
+      "updatedAt": "2026-10-16T07:30:00.000Z"
+    },
+    {
+      "id": "mock-event-d5-2",
+      "tripId": "mock-trip-1",
+      "dayIndex": 4,
+      "order": 1,
+      "title": "TeamLab Planets Toyosu",
+      "category": "activities",
+      "startTime": "11:00",
+      "endTime": "13:30",
+      "cost": 38,
+      "currency": "USD",
+      "location": {
+        "name": "Toyosu, Koto",
+        "address": "6-1-16 Toyosu, Koto, Tokyo",
+        "lat": 35.6491,
+        "lng": 139.7898
+      },
+      "notes": "Barefoot digital art exhibition",
+      "createdAt": "2026-10-16T11:00:00.000Z",
+      "updatedAt": "2026-10-16T11:00:00.000Z"
+    },
+    {
+      "id": "mock-event-d5-3",
+      "tripId": "mock-trip-1",
+      "dayIndex": 4,
+      "order": 2,
+      "title": "Ginza Boutiques & Rooftop Cafe",
+      "category": "dining",
+      "startTime": "15:30",
+      "endTime": "18:00",
+      "cost": 28,
+      "currency": "USD",
+      "location": {
+        "name": "Ginza 6, Chuo",
+        "address": "Ginza Six, Chuo, Tokyo",
+        "lat": 35.6719,
+        "lng": 139.764
+      },
+      "notes": "Tsutaya Books and rooftop garden view",
+      "createdAt": "2026-10-16T15:30:00.000Z",
+      "updatedAt": "2026-10-16T15:30:00.000Z"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "mock-exp-1",
+      "tripId": "mock-trip-1",
+      "amount": 18,
+      "currency": "USD",
+      "category": "activities",
+      "title": "Shibuya Sky Observation Deck",
+      "date": "2026-10-13",
+      "placeEventId": "mock-event-3",
+      "paymentMethod": "Apple Pay (Chase Sapphire)",
+      "notes": "Sunset booking slot 17:20",
+      "dayIndex": 1,
+      "createdAt": "2026-10-13T17:20:00.000Z",
+      "updatedAt": "2026-10-13T17:20:00.000Z"
+    },
+    {
+      "id": "mock-exp-2",
+      "tripId": "mock-trip-1",
+      "amount": 18.5,
+      "currency": "USD",
+      "category": "dining",
+      "title": "Ichiran Ramen Shinjuku",
+      "date": "2026-10-13",
+      "placeEventId": "mock-event-2",
+      "paymentMethod": "Cash (JPY 2,860)",
+      "notes": "Tonkotsu + extra chashu booth",
+      "dayIndex": 1,
+      "createdAt": "2026-10-13T13:10:00.000Z",
+      "updatedAt": "2026-10-13T13:10:00.000Z"
+    },
+    {
+      "id": "mock-exp-3",
+      "tripId": "mock-trip-1",
+      "amount": 35,
+      "currency": "USD",
+      "category": "transport",
+      "title": "Suica IC Card Recharge",
+      "date": "2026-10-12",
+      "paymentMethod": "Credit Card",
+      "notes": "Subway & JR Yamanote lines",
+      "dayIndex": 0,
+      "createdAt": "2026-10-12T10:00:00.000Z",
+      "updatedAt": "2026-10-12T10:00:00.000Z"
+    },
+    {
+      "id": "mock-exp-4",
+      "tripId": "mock-trip-1",
+      "amount": 330,
+      "currency": "USD",
+      "category": "lodging",
+      "title": "Hotel Gracery Shinjuku (Deposit)",
+      "date": "2026-10-12",
+      "placeEventId": "mock-event-1",
+      "paymentMethod": "Visa •••• 4012",
+      "notes": "Night 1-3 prepayment",
+      "dayIndex": 0,
+      "createdAt": "2026-10-12T14:30:00.000Z",
+      "updatedAt": "2026-10-12T14:30:00.000Z"
+    },
+    {
+      "id": "mock-exp-5",
+      "tripId": "mock-trip-1",
+      "amount": 28,
+      "currency": "USD",
+      "category": "transport",
+      "title": "Narita Express Train Ticket",
+      "date": "2026-10-11",
+      "paymentMethod": "Mastercard",
+      "notes": "NRT Terminal 1 to Shinjuku",
+      "dayIndex": -1,
+      "createdAt": "2026-10-11T16:00:00.000Z",
+      "updatedAt": "2026-10-11T16:00:00.000Z"
+    },
+    {
+      "id": "mock-exp-6",
+      "tripId": "mock-trip-1",
+      "amount": 756.2,
+      "currency": "USD",
+      "category": "transport",
+      "title": "Flight Tokyo Narita Return (ANA)",
+      "date": "2026-10-10",
+      "paymentMethod": "Credit Card",
+      "notes": "All Nippon Airways booking ref #NH-492",
+      "dayIndex": -1,
+      "createdAt": "2026-10-10T09:00:00.000Z",
+      "updatedAt": "2026-10-07T20:45:55.244Z",
+      "placeEventId": ""
+    },
+    {
+      "id": "mock-exp-7",
+      "tripId": "mock-trip-1",
+      "amount": 216.15,
+      "currency": "USD",
+      "category": "lodging",
+      "title": "Hotel Gracery Shinjuku (Balance)",
+      "date": "2026-10-12",
+      "paymentMethod": "Visa •••• 4012",
+      "notes": "City tax & room surcharge",
+      "dayIndex": 0,
+      "createdAt": "2026-10-12T18:00:00.000Z",
+      "updatedAt": "2026-10-12T18:00:00.000Z"
+    },
+    {
+      "id": "mock-exp-8",
+      "tripId": "mock-trip-1",
+      "amount": 254.58,
+      "currency": "USD",
+      "category": "dining",
+      "title": "Roppongi Robata & Sake Bar",
+      "date": "2026-10-12",
+      "paymentMethod": "Apple Pay (Chase Sapphire)",
+      "notes": "Charcoal grill seasonal omakase",
+      "dayIndex": 0,
+      "createdAt": "2026-10-12T20:30:00.000Z",
+      "updatedAt": "2026-10-12T20:30:00.000Z"
+    },
+    {
+      "id": "mock-exp-9",
+      "tripId": "mock-trip-1",
+      "amount": 164.07,
+      "currency": "USD",
+      "category": "activities",
+      "title": "TeamLab Planets & Mori Art Museum",
+      "date": "2026-10-13",
+      "placeEventId": "mock-event-3",
+      "paymentMethod": "Credit Card",
+      "notes": "Fast-pass entry & digital exhibition audio",
+      "dayIndex": 1,
+      "createdAt": "2026-10-13T11:00:00.000Z",
+      "updatedAt": "2026-10-13T11:00:00.000Z"
+    }
+  ],
+  "checklists": [
+    {
+      "id": "chk-1",
+      "tripId": "mock-trip-1",
+      "title": "Passport validity checked (6+ months)",
+      "type": "pretrip",
+      "category": "documents",
+      "priority": "high",
+      "isCompleted": true,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-2",
+      "tripId": "mock-trip-1",
+      "title": "Japan Visit Web QR code registered",
+      "type": "pretrip",
+      "category": "documents",
+      "priority": "high",
+      "isCompleted": true,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-3",
+      "tripId": "mock-trip-1",
+      "title": "International Travel Insurance policy printout",
+      "type": "pretrip",
+      "category": "insurance",
+      "priority": "high",
+      "isCompleted": false,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-4",
+      "tripId": "mock-trip-1",
+      "title": "Order Pocket Wi-Fi / e-SIM activation",
+      "type": "pretrip",
+      "category": "documents",
+      "priority": "high",
+      "isCompleted": false,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-5",
+      "tripId": "mock-trip-1",
+      "title": "Shibuya Sky sunset slot reserved",
+      "type": "pretrip",
+      "category": "bookings",
+      "priority": "normal",
+      "isCompleted": true,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-6",
+      "tripId": "mock-trip-1",
+      "title": "TeamLab Planets tickets booked",
+      "type": "pretrip",
+      "category": "bookings",
+      "priority": "high",
+      "isCompleted": false,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-7",
+      "tripId": "mock-trip-1",
+      "title": "Reserve Shinkansen train to Kyoto",
+      "type": "pretrip",
+      "category": "bookings",
+      "priority": "optional",
+      "isCompleted": false,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-8",
+      "tripId": "mock-trip-1",
+      "title": "Universal plug adapter (Type A/B for Japan)",
+      "type": "luggage",
+      "category": "gear",
+      "priority": "normal",
+      "isCompleted": true,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-9",
+      "tripId": "mock-trip-1",
+      "title": "Anker 20,000mAh Power bank",
+      "type": "luggage",
+      "category": "gear",
+      "priority": "normal",
+      "isCompleted": true,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-10",
+      "tripId": "mock-trip-1",
+      "title": "Camera batteries + SD cards",
+      "type": "luggage",
+      "category": "gear",
+      "priority": "high",
+      "isCompleted": false,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-11",
+      "tripId": "mock-trip-1",
+      "title": "Lightweight rain jacket / umbrella",
+      "type": "luggage",
+      "category": "clothes",
+      "priority": "normal",
+      "isCompleted": true,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-12",
+      "tripId": "mock-trip-1",
+      "title": "Comfortable walking sneakers (2 pairs)",
+      "type": "luggage",
+      "category": "clothes",
+      "priority": "normal",
+      "isCompleted": true,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-13",
+      "tripId": "mock-trip-1",
+      "title": "Layered autumn thermal shirts (3x)",
+      "type": "luggage",
+      "category": "clothes",
+      "priority": "optional",
+      "isCompleted": false,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-14",
+      "tripId": "mock-trip-1",
+      "title": "Prescription medications + copy of doctor script",
+      "type": "luggage",
+      "category": "meds",
+      "priority": "high",
+      "isCompleted": true,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    },
+    {
+      "id": "chk-15",
+      "tripId": "mock-trip-1",
+      "title": "Travel-size sunscreen and skincare",
+      "type": "luggage",
+      "category": "meds",
+      "priority": "optional",
+      "isCompleted": false,
+      "createdAt": "2026-10-07T19:20:26.279Z",
+      "updatedAt": "2026-10-07T19:20:26.279Z"
+    }
+  ],
+  "currencies": [
+    {
+      "id": "USD",
+      "code": "USD",
+      "symbol": "$",
+      "name": "US Dollar"
+    },
+    {
+      "id": "EUR",
+      "code": "EUR",
+      "symbol": "€",
+      "name": "Euro"
+    },
+    {
+      "id": "GBP",
+      "code": "GBP",
+      "symbol": "£",
+      "name": "British Pound"
+    },
+    {
+      "id": "JPY",
+      "code": "JPY",
+      "symbol": "¥",
+      "name": "Japanese Yen"
+    },
+    {
+      "id": "ILS",
+      "code": "ILS",
+      "symbol": "₪",
+      "name": "Israeli Shekel"
+    }
+  ],
+  "exchangeRates": [
+    {
+      "id": "latest",
+      "base": "USD",
+      "rates": {
+        "USD": 1,
+        "EUR": 0.92,
+        "GBP": 0.79,
+        "JPY": 155,
+        "ILS": 3.75
+      }
+    }
+  ]
+}

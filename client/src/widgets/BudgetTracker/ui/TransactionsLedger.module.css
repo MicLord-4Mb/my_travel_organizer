@@ -1,0 +1,405 @@
+.ledgerContainer {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-level-1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Toolbar Header */
+.toolbar {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  background-color: var(--color-surface);
+}
+
+.topFilterRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+@media (min-width: 768px) {
+  .topFilterRow {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.searchBox {
+  position: relative;
+  flex: 1;
+  max-width: 360px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 38px;
+  padding: 0 32px 0 36px;
+  background-color: var(--color-canvas-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.searchInput:focus {
+  background-color: var(--color-surface);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-focus);
+}
+
+.clearSearchBtn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  padding: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.controlsGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.selectWrapper {
+  position: relative;
+}
+
+.selectInput {
+  height: 38px;
+  padding: 0 30px 0 10px;
+  background-color: var(--color-canvas-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.selectInput:focus {
+  background-color: var(--color-surface);
+  border-color: var(--color-primary);
+}
+
+.selectChevron {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.iconBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.iconBtn:hover {
+  background-color: var(--color-canvas-bg);
+  color: var(--color-text-primary);
+}
+
+/* Category Filter Tabs / Chips */
+.categoryTabsRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.tabChip {
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--color-border-subtle);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.tabChip:hover {
+  background-color: var(--color-canvas-bg);
+  color: var(--color-text-primary);
+}
+
+.tabChipActive {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.tabChipActive:hover {
+  background-color: var(--color-primary-hover);
+  color: #ffffff;
+}
+
+/* Table */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: var(--font-size-body);
+}
+
+.thead {
+  background-color: var(--color-canvas-bg);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.th {
+  padding: 12px var(--space-md);
+  white-space: nowrap;
+}
+
+.thRight {
+  text-align: right;
+}
+
+.tr {
+  border-bottom: 1px solid var(--color-border-subtle);
+  transition: background-color var(--transition-fast);
+}
+
+.tr:hover {
+  background-color: var(--color-surface-container-low);
+}
+
+.td {
+  padding: 12px var(--space-md);
+  vertical-align: middle;
+}
+
+.tdDate {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.merchantCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 200px;
+}
+
+.categoryIconBox {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.merchantInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.merchantTitle {
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.merchantNotes {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.paymentMethodCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.dayChip {
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  background-color: var(--color-canvas-bg);
+  border: 1px solid var(--color-border-subtle);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.amountCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  white-space: nowrap;
+}
+
+.amountPrimary {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.amountSecondary {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.actionCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.actionBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.actionBtn:hover {
+  background-color: var(--color-canvas-bg);
+  color: var(--color-text-primary);
+}
+
+.actionBtnDanger:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-status-danger);
+}
+
+/* Empty State */
+.emptyState {
+  padding: 48px var(--space-md);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  color: var(--color-text-secondary);
+}
+
+.emptyIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--color-surface-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  margin-bottom: 4px;
+}
+
+.emptyTitle {
+  font-size: var(--font-size-header);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.emptyDesc {
+  font-size: var(--font-size-body);
+  max-width: 320px;
+}
+
+/* Footer Summary */
+.footer {
+  padding: var(--space-md);
+  background-color: var(--color-canvas-bg);
+  border-top: 1px solid var(--color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+@media (min-width: 640px) {
+  .footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.footerSumText {
+  font-family: monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.footerBold {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}

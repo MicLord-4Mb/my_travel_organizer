@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { Badge, ProgressBar, DropdownMenu } from '@shared/ui';
 import type { Trip } from '@shared/types/models';
+import { useCurrency } from '@shared/lib/useCurrency';
+import { inclusiveDayCount, parseLocalDate } from '@shared/lib/date';
 import styles from './TripCard.module.css';
 
 export interface TripCardProps {
@@ -26,8 +28,9 @@ export interface TripCardProps {
 // Helpers for formatted date ranges
 function formatDateRange(startDateStr: string, endDateStr: string): string {
   try {
-    const start = new Date(startDateStr);
-    const end = new Date(endDateStr);
+    const start = parseLocalDate(startDateStr);
+    const end = parseLocalDate(endDateStr);
+    if (!start || !end) return `${startDateStr} – ${endDateStr}`;
     const startMonth = start.toLocaleDateString('en-US', { month: 'short' });
     const endMonth = end.toLocaleDateString('en-US', { month: 'short' });
     const startDay = start.getDate();
@@ -44,14 +47,7 @@ function formatDateRange(startDateStr: string, endDateStr: string): string {
 }
 
 function calculateDays(startDateStr: string, endDateStr: string): number {
-  try {
-    const start = new Date(startDateStr).getTime();
-    const end = new Date(endDateStr).getTime();
-    const diff = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
-    return Math.max(1, diff);
-  } catch {
-    return 1;
-  }
+  return inclusiveDayCount(startDateStr, endDateStr);
 }
 
 export const TripCard: React.FC<TripCardProps> = ({
@@ -61,20 +57,27 @@ export const TripCard: React.FC<TripCardProps> = ({
   onDuplicate,
   onDelete,
 }) => {
+  const { format } = useCurrency();
   const isPast = trip.status === 'completed';
   const isActive = trip.status === 'in_progress';
   const isUpcoming = trip.status === 'planned';
+  const isCancelled = trip.status === 'cancelled';
 
   const totalDays = calculateDays(trip.startDate, trip.endDate);
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
 
-  const budgetLimit = trip.budgetLimit || 2000;
-  const spentBudget = trip.spentBudget || 0;
-  const budgetPercent = Math.min(100, Math.round((spentBudget / budgetLimit) * 100));
+  // Real values only: a missing budget limit / empty checklist is shown as such, never replaced by a made-up number.
+  const budgetLimit = trip.budgetLimit ?? 0;
+  const hasBudget = budgetLimit > 0;
+  const spentBudget = trip.spentBudget ?? 0;
+  const budgetPercent = hasBudget ? Math.min(100, Math.round((spentBudget / budgetLimit) * 100)) : 0;
 
-  const totalChecklist = trip.totalChecklistCount || 12;
-  const packedCount = trip.packedCount || 0;
-  const packingPercent = Math.min(100, Math.round((packedCount / totalChecklist) * 100));
+  const totalChecklist = trip.totalChecklistCount ?? 0;
+  const hasChecklist = totalChecklist > 0;
+  const packedCount = trip.packedCount ?? 0;
+  const packingPercent = hasChecklist
+    ? Math.min(100, Math.round((packedCount / totalChecklist) * 100))
+    : 0;
 
   return (
     <article
@@ -108,6 +111,11 @@ export const TripCard: React.FC<TripCardProps> = ({
           {isPast && (
             <Badge variant="past" glass>
               Completed
+            </Badge>
+          )}
+          {isCancelled && (
+            <Badge variant="neutral" glass>
+              Cancelled
             </Badge>
           )}
 
@@ -173,7 +181,8 @@ export const TripCard: React.FC<TripCardProps> = ({
           </div>
 
           <p className={styles.subtitle}>
-            {totalDays} Days • {trip.description || 'Scenic adventure & exploration'}
+            {totalDays} {totalDays === 1 ? 'Day' : 'Days'}
+            {trip.description ? ` • ${trip.description}` : ''}
           </p>
         </div>
 
@@ -183,10 +192,10 @@ export const TripCard: React.FC<TripCardProps> = ({
             <div className={styles.completedSummaryBox}>
               <span className={styles.completedItemsLabel}>
                 <CheckCircle2 size={16} color="var(--color-status-success)" />
-                All {totalChecklist} items returned
+                {hasChecklist ? `${packedCount}/${totalChecklist} items packed` : 'No checklist'}
               </span>
               <span className={`${styles.metricValue} tabular-nums`}>
-                ${spentBudget.toLocaleString()} Final
+                {format(spentBudget, trip.currency)} Final
               </span>
             </div>
           ) : (
@@ -198,17 +207,23 @@ export const TripCard: React.FC<TripCardProps> = ({
                     <Backpack size={14} /> Packing Progress
                   </span>
                   <span className={`${styles.metricValue} tabular-nums`}>
-                    {packedCount}/{totalChecklist} items{' '}
-                    <span
-                      style={{
-                        color:
-                          packingPercent > 50
-                            ? 'var(--color-status-success)'
-                            : 'var(--color-text-secondary)',
-                      }}
-                    >
-                      ({packingPercent}%)
-                    </span>
+                    {hasChecklist ? (
+                      <>
+                        {packedCount}/{totalChecklist} items{' '}
+                        <span
+                          style={{
+                            color:
+                              packingPercent > 50
+                                ? 'var(--color-status-success)'
+                                : 'var(--color-text-secondary)',
+                          }}
+                        >
+                          ({packingPercent}%)
+                        </span>
+                      </>
+                    ) : (
+                      <span style={{ color: 'var(--color-text-secondary)' }}>No checklist yet</span>
+                    )}
                   </span>
                 </div>
                 <ProgressBar
@@ -230,16 +245,20 @@ export const TripCard: React.FC<TripCardProps> = ({
                     <Wallet size={14} /> Budget Usage
                   </span>
                   <span className={`${styles.metricValue} tabular-nums`}>
-                    ${spentBudget.toLocaleString()}{' '}
+                    {format(spentBudget, trip.currency)}{' '}
                     <span style={{ color: 'var(--color-text-secondary)' }}>
-                      / ${budgetLimit.toLocaleString()} ({budgetPercent}%)
+                      {hasBudget
+                        ? `/ ${format(budgetLimit, trip.currency)} (${budgetPercent}%)`
+                        : '· no budget set'}
                     </span>
                   </span>
                 </div>
                 <ProgressBar
                   value={budgetPercent}
                   variant={
-                    budgetPercent > 90
+                    !hasBudget
+                      ? 'muted'
+                      : budgetPercent > 90
                       ? 'danger'
                       : budgetPercent > 60
                       ? 'warning'
@@ -253,18 +272,8 @@ export const TripCard: React.FC<TripCardProps> = ({
 
         {/* Footer Info */}
         <div className={styles.footer}>
-          <div className={styles.collaborators}>
-            <div className={styles.avatarOverlap}>
-              <img
-                src="/user-avatar-planner.png"
-                alt="Member"
-                className={styles.avatarImg}
-              />
-            </div>
-            <div className={`${styles.avatarOverlap} ${styles.avatarInitial}`}>
-              +2
-            </div>
-          </div>
+          {/* Spacer keeps the link right-aligned (collaborators are not a feature yet) */}
+          <span aria-hidden="true" />
 
           <Link
             to={`/trips/${trip.id}`}

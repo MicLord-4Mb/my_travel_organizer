@@ -1,13 +1,17 @@
 import React from 'react';
 import { Compass, Wallet, CheckSquare, PlusCircle } from 'lucide-react';
 import { Button } from '@shared/ui';
+import { useCurrency } from '@shared/lib/useCurrency';
 import styles from './KpiTicker.module.css';
 
 export interface KpiTickerProps {
   destinationsCount: number;
   spentBudget: number;
   totalBudget: number;
-  readinessPercentage: number;
+  /** ISO currency code `spentBudget` and `totalBudget` are expressed in. */
+  currency: string;
+  /** `null` when no checklist items exist yet. */
+  readinessPercentage: number | null;
   onCreateNewJourney: () => void;
 }
 
@@ -15,9 +19,11 @@ export const KpiTicker: React.FC<KpiTickerProps> = ({
   destinationsCount,
   spentBudget,
   totalBudget,
+  currency,
   readinessPercentage,
   onCreateNewJourney,
 }) => {
+  const { format } = useCurrency();
   return (
     <section className={styles.ticker} aria-label="Trip key performance indicators">
       <div className={styles.metricsGroup}>
@@ -44,8 +50,10 @@ export const KpiTicker: React.FC<KpiTickerProps> = ({
           <div className={styles.metricText}>
             <span className={styles.metricLabel}>Allocated Budget</span>
             <span className={`${styles.metricValue} tabular-nums`}>
-              ${spentBudget.toLocaleString()}{' '}
-              <span className={styles.metricTotal}>/ ${totalBudget.toLocaleString()}</span>
+              {format(spentBudget, currency, { hideDecimals: true })}{' '}
+              <span className={styles.metricTotal}>
+                / {format(totalBudget, currency, { hideDecimals: true })}
+              </span>
             </span>
           </div>
         </div>
@@ -60,7 +68,7 @@ export const KpiTicker: React.FC<KpiTickerProps> = ({
           <div className={styles.metricText}>
             <span className={styles.metricLabel}>Readiness Score</span>
             <span className={`${styles.metricValue} tabular-nums`}>
-              {readinessPercentage}% Prepared
+              {readinessPercentage === null ? 'No checklist yet' : `${readinessPercentage}% Prepared`}
             </span>
           </div>
         </div>

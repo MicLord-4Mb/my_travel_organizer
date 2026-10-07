@@ -7,4 +7,6 @@ export * from './Dialog';
 export * from './Tabs';
 export * from './ProgressBar';
 export * from './DropdownMenu';
+export * from './Checkbox';
 export { ErrorBoundary } from './ErrorBoundary';
+export * from './Toast';

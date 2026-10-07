@@ -52,12 +52,13 @@ docker-compose.override.yml
 
 # Editor directories and files
 .vscode/*
+.antigravity/*
+.agents/*
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea/
 *.iws
 *.iml
-.antigravity/
 *.suo
 *.ntvs*
 *.njsproj

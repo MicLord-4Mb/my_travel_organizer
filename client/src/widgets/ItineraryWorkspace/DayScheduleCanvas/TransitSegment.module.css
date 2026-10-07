@@ -1,0 +1,32 @@
+.transitRow {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 4px 0 12px 0;
+}
+
+.spacer {
+  width: 54px;
+  flex-shrink: 0;
+}
+
+.transitPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 28px;
+  font-size: var(--font-size-micro);
+  color: var(--color-text-secondary);
+}
+
+.transitIcon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-primary);
+}
+
+.transitText {
+  letter-spacing: 0.01em;
+}

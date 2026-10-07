@@ -87,6 +87,10 @@
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-normal: 200ms ease;
+
+  /* Radix UI dynamic properties defaults */
+  --radix-toast-swipe-move-x: 0px;
+  --radix-toast-swipe-end-x: 0px;
 }
 
 /* CSS Reset */

@@ -1,0 +1,100 @@
+.container {
+  padding: var(--space-md);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px dashed var(--color-border-hover);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  box-shadow: var(--shadow-level-1);
+  transition: all var(--transition-fast);
+  margin-top: var(--space-sm);
+}
+
+.container:hover {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+}
+
+.mainAddBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-primary);
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  transition: color var(--transition-fast), transform var(--transition-fast);
+  cursor: pointer;
+}
+
+.mainAddBtn:hover {
+  color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.quickRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.quickLabel {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.quickChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  font-size: var(--font-size-micro);
+  font-weight: 600;
+  box-shadow: var(--shadow-level-1);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.quickChip:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-level-2);
+}
+
+.chipTransport {
+  color: var(--color-category-transport);
+}
+.chipTransport:hover {
+  background: var(--color-category-transport-bg);
+  border-color: var(--color-category-transport);
+}
+
+.chipLodging {
+  color: var(--color-category-lodging);
+}
+.chipLodging:hover {
+  background: var(--color-category-lodging-bg);
+  border-color: var(--color-category-lodging);
+}
+
+.chipActivities {
+  color: var(--color-category-activities);
+}
+.chipActivities:hover {
+  background: var(--color-category-activities-bg);
+  border-color: var(--color-category-activities);
+}
+
+.chipDining {
+  color: var(--color-category-dining);
+}
+.chipDining:hover {
+  background: var(--color-category-dining-bg);
+  border-color: var(--color-category-dining);
+}

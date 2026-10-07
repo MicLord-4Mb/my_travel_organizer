@@ -1,41 +1,37 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useMemo } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { BottomNav } from './BottomNav';
 import { Footer } from './Footer';
-import type { LayoutContextType } from './LayoutContext';
 import styles from './Layout.module.css';
 
-export interface LayoutProps {
-  onPlanNewTrip?: () => void;
-  searchQuery?: string;
-  onSearchChange?: (query: string) => void;
-  children?: React.ReactNode;
-}
+/**
+ * Global Shell and Application Layout Frame.
+ *
+ * Provides the persistent page wrapper:
+ * - Top navigation bar (`<Header />`) with search synchronizer and quick trip creation trigger.
+ * - Central `<main>` viewport rendering child routes through React Router `<Outlet />`.
+ * - Responsive mobile navigation bar (`<BottomNav />`).
+ * - Universal `<Footer />`.
+ */
+export const Layout: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
 
-export const Layout: React.FC<LayoutProps> = ({
-  onPlanNewTrip,
-  searchQuery,
-  onSearchChange,
-  children,
-}) => {
-  const [newTripHandler, setNewTripHandler] = React.useState<(() => void) | undefined>(
-    () => onPlanNewTrip
-  );
+  const searchQuery = useMemo(() => {
+    return new URLSearchParams(location.search).get('q') || '';
+  }, [location.search]);
 
-  const handlePlanNewTrip = () => {
-    if (onPlanNewTrip) {
-      onPlanNewTrip();
-    } else if (newTripHandler) {
-      newTripHandler();
+  const handleSearchChange = (q: string) => {
+    if (q) {
+      navigate(`/?q=${encodeURIComponent(q)}`, { replace: location.pathname === '/' });
     } else {
-      window.dispatchEvent(new CustomEvent('wanderflow:open-new-trip'));
+      navigate('/', { replace: location.pathname === '/' });
     }
   };
 
-  const contextValue: LayoutContextType = {
-    openNewTripModal: handlePlanNewTrip,
-    setOpenNewTripModalHandler: (handler: () => void) => setNewTripHandler(() => handler),
+  const handlePlanNewTrip = () => {
+    navigate('/?new=1');
   };
 
   return (
@@ -43,11 +39,11 @@ export const Layout: React.FC<LayoutProps> = ({
       <Header
         onPlanNewTrip={handlePlanNewTrip}
         searchQuery={searchQuery}
-        onSearchChange={onSearchChange}
+        onSearchChange={handleSearchChange}
       />
 
       <main className={styles.main}>
-        {children || <Outlet context={contextValue} />}
+        <Outlet />
       </main>
 
       <Footer />

@@ -1,15 +1,14 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { useAppDispatch, useAppSelector } from '@app/hooks';
+import React, { useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+
 import {
-  fetchTrips,
-  createTrip,
-  updateTrip,
-  deleteTrip,
-  duplicateTrip,
-  selectAllTrips,
-  selectTripStatus,
-} from '@entities/trip';
+  useGetTripsQuery,
+  useCreateTripMutation,
+  useUpdateTripMutation,
+  useDeleteTripMutation,
+} from '@shared/api/apiSlice';
 import type { Trip } from '@shared/types/models';
+import { useCurrency } from '@shared/lib/useCurrency';
 import { TripFormModal, type TripFormData } from '@features/trip-management';
 import { KpiTicker } from './components/KpiTicker/KpiTicker';
 import {
@@ -20,40 +19,72 @@ import {
 } from './components/TripFilters/TripFilters';
 import { TripCard } from './components/TripCard/TripCard';
 import { EmptyState } from './components/EmptyState/EmptyState';
+import { useToast } from '@shared/ui';
 import styles from './TripsPage.module.css';
 
+/** Base currency used for normalizing dashboard-wide KPI metrics and aggregates. */
+const REPORTING_CURRENCY = 'USD';
+
+/**
+ * Trips Catalog and Overview Dashboard Page.
+ *
+ * Serves as the primary landing dashboard in WanderFlow:
+ * - Aggregates high-level KPIs (active trips, total spent budget, upcoming flights).
+ * - Provides search, status filtering ('all', 'planned', 'in_progress', 'completed'), and sorting.
+ * - Supports grid vs compact table view switching.
+ * - Orchestrates trip creation and editing dialogs.
+ * - Responds to global URL search parameters (`?new=1`, `?q=search`).
+ */
 export const TripsPage: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const trips = useAppSelector(selectAllTrips);
-  const status = useAppSelector(selectTripStatus);
+  const { toast } = useToast();
+  const { sum, baseCurrency } = useCurrency();
+  const reportingCurrency = baseCurrency || REPORTING_CURRENCY;
+  const { data: trips = [], isLoading, isFetching } = useGetTripsQuery();
+  const [createTrip] = useCreateTripMutation();
+  const [updateTrip] = useUpdateTripMutation();
+  const [deleteTrip] = useDeleteTripMutation();
+
+  const status = isLoading || isFetching ? 'loading' : 'succeeded';
 
   // Filter & Control States
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
-  const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('soonest');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
-  // Modal State
+  // Router Search Parameters
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Search query derived directly from router query params without useEffect
+  const searchQuery = searchParams.get('q') || '';
+
+  const handleSearchChange = (q: string) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (q) {
+      nextParams.set('q', q);
+    } else {
+      nextParams.delete('q');
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  // Modal State: open if manually triggered or URL requests ?new=1
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tripToEdit, setTripToEdit] = useState<Trip | null>(null);
 
-  // Fetch initial trips on mount
-  useEffect(() => {
-    dispatch(fetchTrips());
-  }, [dispatch]);
+  const isCreatingNew = searchParams.get('new') === '1';
+  const effectiveIsModalOpen = isModalOpen || isCreatingNew;
 
-  // Listen for global "wanderflow:open-new-trip" custom event
-  useEffect(() => {
-    const handleOpenNewTrip = () => {
+  const handleModalOpenChange = (open: boolean) => {
+    setIsModalOpen(open);
+    if (!open) {
       setTripToEdit(null);
-      setIsModalOpen(true);
-    };
-
-    window.addEventListener('wanderflow:open-new-trip', handleOpenNewTrip);
-    return () => {
-      window.removeEventListener('wanderflow:open-new-trip', handleOpenNewTrip);
-    };
-  }, []);
+      if (searchParams.has('new')) {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete('new');
+        setSearchParams(nextParams, { replace: true });
+      }
+    }
+  };
 
   // Compute status counts for filter tabs
   const counts = useMemo(() => {
@@ -65,7 +96,7 @@ export const TripsPage: React.FC = () => {
     };
   }, [trips]);
 
-  // Compute KPI Ticker Metrics
+  // Compute KPI Ticker Metrics (real data only, no placeholder numbers)
   const kpiMetrics = useMemo(() => {
     // Unique destinations or total active/upcoming trips
     const activeOrUpcoming = trips.filter(
@@ -74,26 +105,29 @@ export const TripsPage: React.FC = () => {
     const destinationNames = new Set(
       activeOrUpcoming.map((t) => t.location?.split(',')[0].trim() || t.title)
     );
-    const destinationsCount = destinationNames.size || activeOrUpcoming.length;
 
-    const spentBudget = trips.reduce((acc, t) => acc + (t.spentBudget || 0), 0);
-    const totalBudget = trips.reduce((acc, t) => acc + (t.budgetLimit || 0), 0);
-
-    const totalPacked = trips.reduce((acc, t) => acc + (t.packedCount || 0), 0);
-    const totalItems = trips.reduce(
-      (acc, t) => acc + (t.totalChecklistCount || 10),
-      0
+    const spentBudget = sum(
+      trips.map((t) => ({ amount: t.spentBudget, currency: t.currency })),
+      reportingCurrency
     );
+    const totalBudget = sum(
+      trips.map((t) => ({ amount: t.budgetLimit, currency: t.currency })),
+      reportingCurrency
+    );
+
+    const totalPacked = trips.reduce((acc, t) => acc + (t.packedCount ?? 0), 0);
+    const totalItems = trips.reduce((acc, t) => acc + (t.totalChecklistCount ?? 0), 0);
+    // `null` = there is no checklist item yet, so readiness is undefined rather than 0%.
     const readinessPercentage =
-      totalItems > 0 ? Math.round((totalPacked / totalItems) * 100) : 0;
+      totalItems > 0 ? Math.round((totalPacked / totalItems) * 100) : null;
 
     return {
-      destinationsCount: destinationsCount || 3,
-      spentBudget: spentBudget || 4250,
-      totalBudget: totalBudget || 9700,
-      readinessPercentage: readinessPercentage || 43,
+      destinationsCount: destinationNames.size,
+      spentBudget,
+      totalBudget,
+      readinessPercentage,
     };
-  }, [trips]);
+  }, [trips, sum, reportingCurrency]);
 
   // Filter and sort trips
   const filteredAndSortedTrips = useMemo(() => {
@@ -128,8 +162,8 @@ export const TripsPage: React.FC = () => {
         if (sortBy === 'alphabetical') {
           return a.title.localeCompare(b.title);
         }
-        // 'soonest'
-        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+        // 'soonest' (YYYY-MM-DD strings sort chronologically)
+        return a.startDate.localeCompare(b.startDate);
       });
   }, [trips, filterStatus, searchQuery, sortBy]);
 
@@ -145,36 +179,62 @@ export const TripsPage: React.FC = () => {
   };
 
   const handleDuplicateTrip = async (tripId: string) => {
-    await dispatch(duplicateTrip(tripId));
+    try {
+      const tripToDup = trips.find((t) => t.id === tripId);
+      if (tripToDup) {
+        const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = tripToDup;
+        await createTrip({ ...rest, title: `${rest.title} (Copy)` }).unwrap();
+        toast({
+          title: 'Success',
+          description: 'Trip duplicated successfully',
+          variant: 'success'
+        });
+      }
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to duplicate trip',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleDeleteTrip = async (tripId: string) => {
     if (window.confirm('Are you sure you want to delete this trip workspace?')) {
-      await dispatch(deleteTrip(tripId));
+      try {
+        await deleteTrip(tripId).unwrap();
+        toast({
+          title: 'Deleted',
+          description: 'Trip deleted successfully',
+          variant: 'success'
+        });
+      } catch (err) {
+        toast({
+          title: 'Error',
+          description: err instanceof Error ? err.message : 'Failed to delete trip',
+          variant: 'destructive'
+        });
+      }
     }
   };
 
   const handleFormSubmit = async (formData: TripFormData) => {
     if (tripToEdit) {
-      await dispatch(
-        updateTrip({
-          id: tripToEdit.id,
-          payload: {
-            ...formData,
-            budgetLimit: formData.budgetLimit || 0,
-          },
-        })
-      );
-    } else {
-      await dispatch(
-        createTrip({
+      await updateTrip({
+        id: tripToEdit.id,
+        payload: {
           ...formData,
           budgetLimit: formData.budgetLimit || 0,
-          spentBudget: 0,
-          packedCount: 0,
-          totalChecklistCount: 12,
-        })
-      );
+        },
+      }).unwrap();
+    } else {
+      await createTrip({
+        ...formData,
+        budgetLimit: formData.budgetLimit || 0,
+        spentBudget: 0,
+        packedCount: 0,
+        totalChecklistCount: 0,
+      }).unwrap();
     }
   };
 
@@ -187,6 +247,7 @@ export const TripsPage: React.FC = () => {
           spentBudget={kpiMetrics.spentBudget}
           totalBudget={kpiMetrics.totalBudget}
           readinessPercentage={kpiMetrics.readinessPercentage}
+          currency={reportingCurrency}
           onCreateNewJourney={handleOpenCreateModal}
         />
 
@@ -195,7 +256,7 @@ export const TripsPage: React.FC = () => {
           currentStatus={filterStatus}
           onStatusChange={setFilterStatus}
           searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          onSearchChange={handleSearchChange}
           sortBy={sortBy}
           onSortChange={setSortBy}
           viewMode={viewMode}
@@ -246,7 +307,10 @@ export const TripsPage: React.FC = () => {
           <EmptyState
             onCreateTrip={handleOpenCreateModal}
             onImportItinerary={() => {
-              alert('Itinerary import (.ics / JSON) feature is coming soon!');
+              toast({
+                title: 'Coming Soon',
+                description: 'Itinerary import (.ics / JSON) feature is coming soon!'
+              });
             }}
             title="Planning a new destination?"
             description="Organize daily agendas, track accommodation costs, and curate interactive checklists in WanderFlow's minimalist space."
@@ -256,8 +320,8 @@ export const TripsPage: React.FC = () => {
 
       {/* Create / Edit Trip Modal */}
       <TripFormModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
+        open={effectiveIsModalOpen}
+        onOpenChange={handleModalOpenChange}
         tripToEdit={tripToEdit}
         onSubmit={handleFormSubmit}
       />
