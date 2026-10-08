@@ -135,7 +135,7 @@ export const ChecklistsPage: React.FC = () => {
   const handleToggleItem = async (id: string, isCompleted: boolean) => {
     try {
       await updateChecklistItem({ id, payload: { isCompleted } }).unwrap();
-    } catch (err) {
+    } catch {
       toast({ title: 'Error', description: 'Failed to update item', variant: 'destructive' });
     }
   };
@@ -143,7 +143,7 @@ export const ChecklistsPage: React.FC = () => {
   const handleDeleteItem = async (id: string) => {
     try {
       await deleteChecklistItem(id).unwrap();
-    } catch (err) {
+    } catch {
       toast({ title: 'Error', description: 'Failed to delete item', variant: 'destructive' });
     }
   };
@@ -157,7 +157,7 @@ export const ChecklistsPage: React.FC = () => {
             .map(i => updateChecklistItem({ id: i.id, payload: { isCompleted: true } }).unwrap())
         );
         toast({ title: 'Success', description: 'All items marked as completed', variant: 'success' });
-      } catch (err) {
+      } catch {
         toast({ title: 'Error', description: 'Failed to update some items', variant: 'destructive' });
       }
     }
@@ -172,7 +172,7 @@ export const ChecklistsPage: React.FC = () => {
             .map(i => updateChecklistItem({ id: i.id, payload: { isCompleted: false } }).unwrap())
         );
         toast({ title: 'Success', description: 'Checklist reset successfully', variant: 'success' });
-      } catch (err) {
+      } catch {
         toast({ title: 'Error', description: 'Failed to reset checklist', variant: 'destructive' });
       }
     }
@@ -199,7 +199,7 @@ export const ChecklistsPage: React.FC = () => {
           isCompleted: false,
         }).unwrap();
         toast({ title: 'Success', description: 'Item added successfully', variant: 'success' });
-      } catch (err) {
+      } catch {
         toast({ title: 'Error', description: 'Failed to add item', variant: 'destructive' });
       }
     }
@@ -223,7 +223,7 @@ export const ChecklistsPage: React.FC = () => {
           isCompleted: false,
         }).unwrap();
         toast({ title: 'Success', description: 'Item added successfully', variant: 'success' });
-      } catch (err) {
+      } catch {
         toast({ title: 'Error', description: 'Failed to add item', variant: 'destructive' });
       }
     }
