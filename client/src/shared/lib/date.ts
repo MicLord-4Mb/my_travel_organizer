@@ -21,15 +21,23 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
  */
 export function parseLocalDate(value: string | undefined | null): Date | null {
   if (!value) return null;
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-  if (!match) return null;
-  const [, year, month, day] = match;
-  const date = new Date(Number(year), Number(month) - 1, Number(day));
+  
+  const datePart = value.split('T')[0];
+  const parts = datePart.split('-');
+  if (parts.length < 3) return null;
+
+  const year = Number(parts[0]);
+  const month = Number(parts[1]);
+  const day = Number(parts[2]);
+
+  if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+
+  const date = new Date(year, month - 1, day);
   // Reject overflowing dates such as 2026-02-31
   if (
-    date.getFullYear() !== Number(year) ||
-    date.getMonth() !== Number(month) - 1 ||
-    date.getDate() !== Number(day)
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
   ) {
     return null;
   }
@@ -88,4 +96,28 @@ export function inclusiveDayCount(startDate: string, endDate: string): number {
   const end = parseLocalDate(endDate);
   if (!start || !end) return 0;
   return Math.max(0, diffInDays(start, end) + 1);
+}
+
+/**
+ * Formats a Date object for display according to local timezone and options.
+ *
+ * @param {Date} date - The date to format.
+ * @param {Intl.DateTimeFormatOptions} options - Formatting options.
+ * @returns {string} Formatted string.
+ */
+export function formatLocalDate(date: Date, options?: Intl.DateTimeFormatOptions): string {
+  return date.toLocaleDateString(undefined, options);
+}
+
+/**
+ * Safely adds a given number of days to a Date object, preventing DST issues.
+ *
+ * @param {Date} date - Starting date.
+ * @param {number} days - Number of days to add.
+ * @returns {Date} Resulting date at local midnight.
+ */
+export function addDaysLocalDate(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return startOfLocalDay(result);
 }
