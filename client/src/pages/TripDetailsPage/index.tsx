@@ -165,7 +165,7 @@ export default function TripDetailsPage() {
     if (!activeTrip) return;
     if (window.confirm(`Are you sure you want to remove "${event.title}"?`)) {
       try {
-        await deleteEvent(event.id).unwrap();
+        await deleteEvent({ id: event.id, tripId: activeTrip.id }).unwrap();
         toast({
           title: 'Deleted',
           description: 'Activity successfully removed',
