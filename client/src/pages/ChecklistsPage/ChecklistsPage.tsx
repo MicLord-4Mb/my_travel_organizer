@@ -133,30 +133,48 @@ export const ChecklistsPage: React.FC = () => {
 
   // Handlers
   const handleToggleItem = async (id: string, isCompleted: boolean) => {
-    await updateChecklistItem({ id, payload: { isCompleted } });
+    try {
+      await updateChecklistItem({ id, payload: { isCompleted } }).unwrap();
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to update item', variant: 'destructive' });
+    }
   };
 
   const handleDeleteItem = async (id: string) => {
-    await deleteChecklistItem(id);
+    try {
+      await deleteChecklistItem(id).unwrap();
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to delete item', variant: 'destructive' });
+    }
   };
 
   const handleMarkAllCompleted = async () => {
     if (effectiveTripId) {
-      await Promise.all(
-        tripItems
-          .filter(i => !i.isCompleted)
-          .map(i => updateChecklistItem({ id: i.id, payload: { isCompleted: true } }))
-      );
+      try {
+        await Promise.all(
+          tripItems
+            .filter(i => !i.isCompleted)
+            .map(i => updateChecklistItem({ id: i.id, payload: { isCompleted: true } }).unwrap())
+        );
+        toast({ title: 'Success', description: 'All items marked as completed', variant: 'success' });
+      } catch (err) {
+        toast({ title: 'Error', description: 'Failed to update some items', variant: 'destructive' });
+      }
     }
   };
 
   const handleResetChecklist = async () => {
     if (effectiveTripId) {
-      await Promise.all(
-        tripItems
-          .filter(i => i.isCompleted)
-          .map(i => updateChecklistItem({ id: i.id, payload: { isCompleted: false } }))
-      );
+      try {
+        await Promise.all(
+          tripItems
+            .filter(i => i.isCompleted)
+            .map(i => updateChecklistItem({ id: i.id, payload: { isCompleted: false } }).unwrap())
+        );
+        toast({ title: 'Success', description: 'Checklist reset successfully', variant: 'success' });
+      } catch (err) {
+        toast({ title: 'Error', description: 'Failed to reset checklist', variant: 'destructive' });
+      }
     }
   };
 
@@ -170,15 +188,20 @@ export const ChecklistsPage: React.FC = () => {
 
   const handleAddItemModalSubmit = async (data: ChecklistItemFormData) => {
     if (effectiveTripId) {
-      await createChecklistItem({
-        tripId: effectiveTripId,
-        title: data.title,
-        type: data.type,
-        category: data.category,
-        priority: data.priority,
-        quantity: data.quantity || 1,
-        isCompleted: false,
-      });
+      try {
+        await createChecklistItem({
+          tripId: effectiveTripId,
+          title: data.title,
+          type: data.type,
+          category: data.category,
+          priority: data.priority,
+          quantity: data.quantity || 1,
+          isCompleted: false,
+        }).unwrap();
+        toast({ title: 'Success', description: 'Item added successfully', variant: 'success' });
+      } catch (err) {
+        toast({ title: 'Error', description: 'Failed to add item', variant: 'destructive' });
+      }
     }
   };
 
@@ -189,15 +212,20 @@ export const ChecklistsPage: React.FC = () => {
     priority: 'high' | 'normal' | 'optional';
   }) => {
     if (effectiveTripId) {
-      await createChecklistItem({
-        tripId: effectiveTripId,
-        title: item.title,
-        type: item.type,
-        category: item.category,
-        priority: item.priority,
-        quantity: 1,
-        isCompleted: false,
-      });
+      try {
+        await createChecklistItem({
+          tripId: effectiveTripId,
+          title: item.title,
+          type: item.type,
+          category: item.category,
+          priority: item.priority,
+          quantity: 1,
+          isCompleted: false,
+        }).unwrap();
+        toast({ title: 'Success', description: 'Item added successfully', variant: 'success' });
+      } catch (err) {
+        toast({ title: 'Error', description: 'Failed to add item', variant: 'destructive' });
+      }
     }
   };
 

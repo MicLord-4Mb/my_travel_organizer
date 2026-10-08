@@ -26,6 +26,7 @@ export const AddChecklistItemModal: React.FC<AddChecklistItemModalProps> = ({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ChecklistItemFormData>({
     resolver: zodResolver(checklistItemSchema),
@@ -39,6 +40,13 @@ export const AddChecklistItemModal: React.FC<AddChecklistItemModalProps> = ({
   });
 
   const selectedType = watch('type');
+  const selectedCategory = watch('category');
+
+  useEffect(() => {
+    if (selectedType === 'luggage' && selectedCategory === 'documents') {
+      setValue('category', 'gear');
+    }
+  }, [selectedType, selectedCategory, setValue]);
 
   useEffect(() => {
     if (open) {
@@ -100,7 +108,6 @@ export const AddChecklistItemModal: React.FC<AddChecklistItemModalProps> = ({
                     { value: 'gear', label: 'Electronics & Gear' },
                     { value: 'clothes', label: 'Clothing & Footwear' },
                     { value: 'meds', label: 'Toiletries & Medicine' },
-                    { value: 'documents', label: 'Physical Documents' },
                   ]
             }
             {...register('category')}
