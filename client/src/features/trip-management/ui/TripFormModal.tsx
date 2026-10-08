@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, Input, Select, Button, useToast } from '@shared/ui';
 import type { Trip } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
+import { toDateInputValue, addDaysLocalDate } from '@shared/lib/date';
 import { tripSchema, type TripFormData } from '../model/tripSchema';
 import styles from './TripFormModal.module.css';
 
@@ -75,8 +76,8 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
       title: '',
       description: '',
       location: '',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+      startDate: toDateInputValue(new Date()),
+      endDate: toDateInputValue(addDaysLocalDate(new Date(), 7)),
       status: 'planned',
       budgetLimit: 2000,
       currency: baseCurrency || 'USD',
@@ -105,8 +106,8 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
           title: '',
           description: '',
           location: '',
-          startDate: new Date().toISOString().split('T')[0],
-          endDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+          startDate: toDateInputValue(new Date()),
+          endDate: toDateInputValue(addDaysLocalDate(new Date(), 7)),
           status: 'planned',
           budgetLimit: 2000,
           currency: baseCurrency || 'USD',

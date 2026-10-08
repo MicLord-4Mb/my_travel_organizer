@@ -23,6 +23,7 @@ import {
 } from '@features/itinerary-management';
 import { TripFormModal } from '@features/trip-management';
 import { useCurrency } from '@shared/lib/useCurrency';
+import { parseLocalDate, addDaysLocalDate, toDateInputValue } from '@shared/lib/date';
 import { useToast } from '@shared/ui';
 import styles from './TripDetailsPage.module.css';
 
@@ -124,9 +125,9 @@ export default function TripDetailsPage() {
 
   const handleAddDay = async () => {
     if (!activeTrip) return;
-    const currentEnd = new Date(activeTrip.endDate);
-    currentEnd.setDate(currentEnd.getDate() + 1);
-    const newEndStr = currentEnd.toISOString().split('T')[0];
+    const currentEnd = parseLocalDate(activeTrip.endDate);
+    if (!currentEnd) return;
+    const newEndStr = toDateInputValue(addDaysLocalDate(currentEnd, 1));
 
     try {
       await updateTripMutation({
@@ -219,7 +220,9 @@ export default function TripDetailsPage() {
         },
       }).unwrap();
     } else {
-      const order = activeDayEvents.length;
+      const targetDayEvents = allEvents.filter(e => e.dayIndex === formData.dayIndex);
+      const order = targetDayEvents.length > 0 ? Math.max(...targetDayEvents.map(e => e.order ?? 0)) + 1 : 0;
+      
       await createEvent({
         tripId: activeTrip.id,
         title: formData.title,
@@ -345,23 +348,10 @@ export default function TripDetailsPage() {
           onOpenChange={setIsEditTripModalOpen}
           tripToEdit={activeTrip}
           onSubmit={async (tripData) => {
-            try {
-              await updateTripMutation({
-                id: activeTrip.id,
-                payload: tripData,
-              }).unwrap();
-              toast({
-                title: 'Success',
-                description: 'Trip metadata updated',
-                variant: 'success'
-              });
-            } catch (err) {
-              toast({
-                title: 'Error',
-                description: err instanceof Error ? err.message : 'Failed to update trip metadata',
-                variant: 'destructive'
-              });
-            }
+            await updateTripMutation({
+              id: activeTrip.id,
+              payload: tripData,
+            }).unwrap();
           }}
         />
       )}

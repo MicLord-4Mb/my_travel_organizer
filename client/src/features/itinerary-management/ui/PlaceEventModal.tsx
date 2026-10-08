@@ -19,6 +19,7 @@ import {
   placeEventSchema,
   type PlaceEventFormData,
 } from '../model/placeEventSchema';
+import { parseLocalDate, addDaysLocalDate, formatLocalDate } from '@shared/lib/date';
 import styles from './PlaceEventModal.module.css';
 
 /**
@@ -184,17 +185,14 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
 
   const getDayLabel = (idx: number) => {
     if (!startDate) return `Day ${idx + 1}`;
-    try {
-      const d = new Date(startDate);
-      d.setDate(d.getDate() + idx);
-      const formatted = d.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      });
-      return `Day ${idx + 1} (${formatted})`;
-    } catch {
-      return `Day ${idx + 1}`;
-    }
+    const start = parseLocalDate(startDate);
+    if (!start) return `Day ${idx + 1}`;
+    const d = addDaysLocalDate(start, idx);
+    const formatted = formatLocalDate(d, {
+      month: 'short',
+      day: 'numeric',
+    });
+    return `Day ${idx + 1} (${formatted})`;
   };
 
   return (

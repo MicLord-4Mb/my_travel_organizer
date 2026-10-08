@@ -16,6 +16,7 @@ import { Dialog, Button, useToast } from '@shared/ui';
 import type { Expense, Trip, PlaceEvent } from '@shared/types/models';
 import { expenseSchema, type ExpenseFormData } from '../model/expenseSchema';
 import { useCurrency } from '@shared/lib/useCurrency';
+import { toDateInputValue, parseLocalDate, addDaysLocalDate, inclusiveDayCount, formatLocalDate } from '@shared/lib/date';
 import { normalizeCategory, type NormalizedExpenseCategory } from '@entities/expense';
 import styles from './ExpenseModal.module.css';
 
@@ -120,7 +121,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       amount: 25.0,
       currency: trip.currency || 'USD',
       category: 'dining',
-      date: new Date().toISOString().split('T')[0],
+      date: toDateInputValue(new Date()),
       dayIndex: 1,
       paymentMethod: 'Credit Card',
       notes: '',
@@ -137,21 +138,20 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
     { label: 'Pre-Trip Booking', value: -1 },
   ];
   if (trip.startDate) {
-    const startDate = new Date(trip.startDate);
-    const endDate = trip.endDate ? new Date(trip.endDate) : startDate;
-    const diffDays = Math.max(
-      1,
-      Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
-    );
+    const diffDays = inclusiveDayCount(trip.startDate, trip.endDate || trip.startDate);
+    const start = parseLocalDate(trip.startDate);
+    const todayStr = toDateInputValue(new Date());
 
-    for (let i = 0; i < diffDays; i++) {
-      const d = new Date(startDate);
-      d.setDate(d.getDate() + i);
-      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      daysList.push({
-        label: `Day ${i + 1} • ${dateStr}${i === 1 ? ' (Today)' : ''}`,
-        value: i,
-      });
+    if (start) {
+      for (let i = 0; i < diffDays; i++) {
+        const d = addDaysLocalDate(start, i);
+        const dateStr = formatLocalDate(d, { month: 'short', day: 'numeric' });
+        const isToday = toDateInputValue(d) === todayStr;
+        daysList.push({
+          label: `Day ${i + 1} • ${dateStr}${isToday ? ' (Today)' : ''}`,
+          value: i,
+        });
+      }
     }
   }
 
@@ -163,7 +163,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           amount: expenseToEdit.amount,
           currency: expenseToEdit.currency || trip.currency || 'USD',
           category: normalizeCategory(expenseToEdit.category),
-          date: expenseToEdit.date ? expenseToEdit.date.split('T')[0] : new Date().toISOString().split('T')[0],
+          date: expenseToEdit.date ? expenseToEdit.date.split('T')[0] : toDateInputValue(new Date()),
           dayIndex: expenseToEdit.dayIndex !== undefined ? expenseToEdit.dayIndex : 0,
           paymentMethod: expenseToEdit.paymentMethod || 'Credit Card',
           notes: expenseToEdit.notes || '',
@@ -175,7 +175,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           amount: 25.0,
           currency: trip.currency || 'USD',
           category: 'dining',
-          date: new Date().toISOString().split('T')[0],
+          date: toDateInputValue(new Date()),
           dayIndex: 1,
           paymentMethod: 'Credit Card',
           notes: '',
