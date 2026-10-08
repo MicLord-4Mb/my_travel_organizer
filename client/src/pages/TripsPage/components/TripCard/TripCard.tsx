@@ -15,6 +15,7 @@ import { Badge, ProgressBar, DropdownMenu } from '@shared/ui';
 import type { Trip } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
 import { inclusiveDayCount, parseLocalDate } from '@shared/lib/date';
+import { useGetExpensesByTripIdQuery, useGetChecklistsByTripIdQuery } from '@shared/api/apiSlice';
 import styles from './TripCard.module.css';
 
 export interface TripCardProps {
@@ -66,15 +67,18 @@ export const TripCard: React.FC<TripCardProps> = ({
   const totalDays = calculateDays(trip.startDate, trip.endDate);
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
 
+  const { data: tripExpenses = [] } = useGetExpensesByTripIdQuery(trip.id);
+  const { data: tripChecklists = [] } = useGetChecklistsByTripIdQuery(trip.id);
+
   // Real values only: a missing budget limit / empty checklist is shown as such, never replaced by a made-up number.
   const budgetLimit = trip.budgetLimit ?? 0;
   const hasBudget = budgetLimit > 0;
-  const spentBudget = trip.spentBudget ?? 0;
+  const spentBudget = tripExpenses.reduce((sum, e) => sum + e.amount, 0);
   const budgetPercent = hasBudget ? Math.min(100, Math.round((spentBudget / budgetLimit) * 100)) : 0;
 
-  const totalChecklist = trip.totalChecklistCount ?? 0;
+  const totalChecklist = tripChecklists.length;
   const hasChecklist = totalChecklist > 0;
-  const packedCount = trip.packedCount ?? 0;
+  const packedCount = tripChecklists.filter(c => c.isCompleted).length;
   const packingPercent = hasChecklist
     ? Math.min(100, Math.round((packedCount / totalChecklist) * 100))
     : 0;

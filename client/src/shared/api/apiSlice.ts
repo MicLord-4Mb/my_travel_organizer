@@ -78,7 +78,7 @@ export const apiSlice = createApi({
         method: 'POST',
         body: {
           ...body,
-          id: `trip-${Date.now()}`,
+          id: crypto.randomUUID(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
@@ -120,14 +120,14 @@ export const apiSlice = createApi({
      * Retrieves all itinerary stops and activities for a given trip.
      */
     getEventsByTripId: builder.query<PlaceEvent[], string>({
-      query: (tripId) => `events?tripId=${tripId}`,
-      providesTags: (result) =>
+      query: (tripId) => ({ url: 'events', params: { tripId } }),
+      providesTags: (result, _error, tripId) =>
         result
           ? [
               ...result.map(({ id }) => ({ type: 'Event' as const, id })),
-              { type: 'Event', id: 'LIST' },
+              { type: 'Event', id: `TRIP_${tripId}` },
             ]
-          : [{ type: 'Event', id: 'LIST' }],
+          : [{ type: 'Event', id: `TRIP_${tripId}` }],
     }),
 
     /**
@@ -139,12 +139,12 @@ export const apiSlice = createApi({
         method: 'POST',
         body: {
           ...body,
-          id: `event-${Date.now()}`,
+          id: crypto.randomUUID(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
       }),
-      invalidatesTags: [{ type: 'Event', id: 'LIST' }],
+      invalidatesTags: (_result, _error, body) => [{ type: 'Event', id: `TRIP_${body.tripId}` }],
     }),
 
     /**
@@ -165,12 +165,12 @@ export const apiSlice = createApi({
     /**
      * Deletes an itinerary event by ID.
      */
-    deleteEvent: builder.mutation<void, string>({
-      query: (id) => ({
+    deleteEvent: builder.mutation<void, { id: string; tripId: string }>({
+      query: ({ id }) => ({
         url: `events/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (_result, _error, id) => [{ type: 'Event', id }, { type: 'Event', id: 'LIST' }],
+      invalidatesTags: (_result, _error, { id, tripId }) => [{ type: 'Event', id }, { type: 'Event', id: `TRIP_${tripId}` }],
     }),
 
     // ==========================================
@@ -178,10 +178,24 @@ export const apiSlice = createApi({
     // ==========================================
 
     /**
+     * Retrieves all expenses across all trips.
+     */
+    getExpenses: builder.query<Expense[], void>({
+      query: () => 'expenses',
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: 'Expense' as const, id })),
+              { type: 'Expense', id: 'LIST' },
+            ]
+          : [{ type: 'Expense', id: 'LIST' }],
+    }),
+
+    /**
      * Retrieves financial expense records logged for a specific trip.
      */
     getExpensesByTripId: builder.query<Expense[], string>({
-      query: (tripId) => `expenses?tripId=${tripId}`,
+      query: (tripId) => ({ url: 'expenses', params: { tripId } }),
       providesTags: (result) =>
         result
           ? [
@@ -200,7 +214,7 @@ export const apiSlice = createApi({
         method: 'POST',
         body: {
           ...body,
-          id: `exp-${Date.now()}`,
+          id: crypto.randomUUID(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
@@ -239,10 +253,24 @@ export const apiSlice = createApi({
     // ==========================================
 
     /**
+     * Retrieves all checklists across all trips.
+     */
+    getChecklists: builder.query<ChecklistItem[], void>({
+      query: () => 'checklists',
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: 'Checklist' as const, id })),
+              { type: 'Checklist', id: 'LIST' },
+            ]
+          : [{ type: 'Checklist', id: 'LIST' }],
+    }),
+
+    /**
      * Retrieves all checklist tasks and luggage items for a trip.
      */
     getChecklistsByTripId: builder.query<ChecklistItem[], string>({
-      query: (tripId) => `checklists?tripId=${tripId}`,
+      query: (tripId) => ({ url: 'checklists', params: { tripId } }),
       providesTags: (result) =>
         result
           ? [
@@ -261,7 +289,7 @@ export const apiSlice = createApi({
         method: 'POST',
         body: {
           ...body,
-          id: `chk-${Date.now()}`,
+          id: crypto.randomUUID(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
@@ -307,10 +335,12 @@ export const {
   useCreateEventMutation,
   useUpdateEventMutation,
   useDeleteEventMutation,
+  useGetExpensesQuery,
   useGetExpensesByTripIdQuery,
   useCreateExpenseMutation,
   useUpdateExpenseMutation,
   useDeleteExpenseMutation,
+  useGetChecklistsQuery,
   useGetChecklistsByTripIdQuery,
   useCreateChecklistItemMutation,
   useUpdateChecklistItemMutation,

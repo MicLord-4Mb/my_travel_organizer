@@ -15,6 +15,7 @@ import { Badge } from '@shared/ui';
 import type { Trip } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
 import { parseLocalDate } from '@shared/lib/date';
+import { useGetExpensesByTripIdQuery, useGetChecklistsByTripIdQuery } from '@shared/api/apiSlice';
 import styles from './TripContextHeader.module.css';
 
 export interface TripContextHeaderProps {
@@ -33,6 +34,9 @@ export const TripContextHeader: React.FC<TripContextHeaderProps> = ({
   const navigate = useNavigate();
   const { format } = useCurrency();
   const [copied, setCopied] = useState(false);
+
+  const { data: tripExpenses = [] } = useGetExpensesByTripIdQuery(trip.id);
+  const { data: tripChecklists = [] } = useGetChecklistsByTripIdQuery(trip.id);
 
   const handleShare = () => {
     navigator.clipboard?.writeText(window.location.href);
@@ -61,13 +65,13 @@ export const TripContextHeader: React.FC<TripContextHeaderProps> = ({
   };
 
   // Real values only: a missing budget limit / empty checklist is shown as such.
-  const spent = trip.spentBudget ?? 0;
+  const spent = tripExpenses.reduce((sum, e) => sum + e.amount, 0);
   const limit = trip.budgetLimit ?? 0;
   const hasBudget = limit > 0;
   const budgetPercent = hasBudget ? Math.min(100, Math.round((spent / limit) * 100)) : 0;
 
-  const packed = trip.packedCount ?? 0;
-  const totalChecklist = trip.totalChecklistCount ?? 0;
+  const totalChecklist = tripChecklists.length;
+  const packed = tripChecklists.filter(c => c.isCompleted).length;
   const checklistPercent =
     totalChecklist > 0 ? Math.min(100, Math.round((packed / totalChecklist) * 100)) : 0;
 

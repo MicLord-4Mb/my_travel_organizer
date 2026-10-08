@@ -1,8 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { type NormalizedExpenseCategory, type ExpenseSortOption } from '@entities/expense/model/types';
-import { computeBudgetAnalytics } from '@entities/expense/model/budgetAnalytics';
-import { normalizeCategory } from '@entities/expense/model/types';
+import {
+  type NormalizedExpenseCategory,
+  type ExpenseSortOption,
+  computeBudgetAnalytics,
+  normalizeCategory
+} from '@entities/expense';
 import {
   useGetTripsQuery,
   useGetExpensesByTripIdQuery,
