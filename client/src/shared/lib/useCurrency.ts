@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useGetCurrenciesQuery, useGetExchangeRatesQuery } from '@shared/api/apiSlice';
 import {
   convertCurrencyWithRates,
@@ -67,9 +67,9 @@ export function useCurrency() {
    * @param {string} [toCurrency='USD'] - Target currency code.
    * @returns {number} Converted value.
    */
-  const convert = (amount: number, fromCurrency: string = 'USD', toCurrency: string = 'USD') => {
+  const convert = useCallback((amount: number, fromCurrency: string = 'USD', toCurrency: string = 'USD') => {
     return convertCurrencyWithRates(amount, fromCurrency, toCurrency, rates, baseCurrency);
-  };
+  }, [rates, baseCurrency]);
 
   /**
    * Formats a monetary value using live symbol mappings.
@@ -79,9 +79,9 @@ export function useCurrency() {
    * @param {FormatCurrencyOptions} [options] - Formatting configuration.
    * @returns {string} Formatted display string.
    */
-  const format = (amount: number, currency: string = 'USD', options?: FormatCurrencyOptions) => {
+  const format = useCallback((amount: number, currency: string = 'USD', options?: FormatCurrencyOptions) => {
     return formatCurrencyWithSymbols(amount, currency, symbols, options);
-  };
+  }, [symbols]);
 
   /**
    * Sums an array of expense records in a single target currency.
@@ -90,9 +90,9 @@ export function useCurrency() {
    * @param {string} targetCurrency - ISO code of target currency.
    * @returns {number} Aggregated total sum.
    */
-  const sum = (entries: ReadonlyArray<{ amount?: number | null; currency?: string | null }>, targetCurrency: string) => {
+  const sum = useCallback((entries: ReadonlyArray<{ amount?: number | null; currency?: string | null }>, targetCurrency: string) => {
     return sumInCurrencyWithRates(entries, targetCurrency, rates, baseCurrency);
-  };
+  }, [rates, baseCurrency]);
 
   return {
     currencies,
