@@ -55,8 +55,13 @@ export function convertCurrencyWithRates(
   const fromUpper = fromCurrency.toUpperCase();
   const toUpper = toCurrency.toUpperCase();
 
-  const rateFrom = rates[fromUpper] || 1;
-  const rateTo = rates[toUpper] || 1;
+  const rateFrom = fromUpper === _baseCurrency ? 1 : rates[fromUpper];
+  const rateTo = toUpper === _baseCurrency ? 1 : rates[toUpper];
+
+  if (!rateFrom || !rateTo) {
+    console.warn(`Missing exchange rate for ${!rateFrom ? fromUpper : toUpper}`);
+    return amount;
+  }
 
   // Convert to intermediate base currency, then to target
   const inBase = amount / rateFrom;
