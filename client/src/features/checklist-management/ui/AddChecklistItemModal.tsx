@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, Input, Select, Button } from '@shared/ui';
+import { CHECKLIST_TYPE_OPTIONS, CHECKLIST_CATEGORIES_BY_TYPE, CHECKLIST_PRIORITY_OPTIONS } from '@entities/checklist';
 import {
   checklistItemSchema,
   type ChecklistItemFormData,
@@ -86,10 +87,7 @@ export const AddChecklistItemModal: React.FC<AddChecklistItemModalProps> = ({
           <Select
             label="List Section"
             error={errors.type?.message}
-            options={[
-              { value: 'pretrip', label: 'Pre-Trip Tasks & Formalities' },
-              { value: 'luggage', label: 'Luggage & Packing Inventory' },
-            ]}
+            options={CHECKLIST_TYPE_OPTIONS as any}
             {...register('type')}
           />
 
@@ -98,17 +96,8 @@ export const AddChecklistItemModal: React.FC<AddChecklistItemModalProps> = ({
             error={errors.category?.message}
             options={
               selectedType === 'pretrip'
-                ? [
-                    { value: 'documents', label: 'Travel Documents' },
-                    { value: 'bookings', label: 'Bookings & Confirmations' },
-                    { value: 'insurance', label: 'Insurance & Health' },
-                    { value: 'tasks', label: 'General Pre-trip Tasks' },
-                  ]
-                : [
-                    { value: 'gear', label: 'Electronics & Gear' },
-                    { value: 'clothes', label: 'Clothing & Footwear' },
-                    { value: 'meds', label: 'Toiletries & Medicine' },
-                  ]
+                ? (CHECKLIST_CATEGORIES_BY_TYPE.pretrip as any)
+                : (CHECKLIST_CATEGORIES_BY_TYPE.luggage as any)
             }
             {...register('category')}
           />
@@ -118,11 +107,7 @@ export const AddChecklistItemModal: React.FC<AddChecklistItemModalProps> = ({
           <Select
             label="Priority Level"
             error={errors.priority?.message}
-            options={[
-              { value: 'normal', label: 'Normal Priority' },
-              { value: 'high', label: 'High Priority (Crucial)' },
-              { value: 'optional', label: 'Optional / Nice to have' },
-            ]}
+            options={CHECKLIST_PRIORITY_OPTIONS as any}
             {...register('priority')}
           />
 

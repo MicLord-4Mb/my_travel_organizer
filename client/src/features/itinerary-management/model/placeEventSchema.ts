@@ -1,4 +1,12 @@
 import { z } from 'zod';
+import { EVENT_CATEGORY_OPTIONS } from '@entities/itinerary';
+
+type EventCategoryValue = (typeof EVENT_CATEGORY_OPTIONS)[number]['value'];
+const categories = EVENT_CATEGORY_OPTIONS.map((o) => o.value) as [
+  EventCategoryValue,
+  ...EventCategoryValue[]
+];
+
 
 /**
  * Validation schema for itinerary stops, activities, and transit event forms.
@@ -18,7 +26,7 @@ export const placeEventSchema = z.object({
     .min(2, { message: 'Title must be at least 2 characters' })
     .max(100, { message: 'Title is too long (max 100 characters)' }),
   /** Category classification */
-  category: z.enum(['transport', 'lodging', 'activities', 'dining'], {
+  category: z.enum(categories, {
     message: 'Please select a valid category',
   }),
   /** Zero-based day index relative to trip start */

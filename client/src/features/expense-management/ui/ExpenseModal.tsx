@@ -17,7 +17,7 @@ import type { Expense, Trip, PlaceEvent } from '@shared/types/models';
 import { expenseSchema, type ExpenseFormData } from '../model/expenseSchema';
 import { useCurrency } from '@shared/lib/useCurrency';
 import { toDateInputValue, parseLocalDate, addDaysLocalDate, inclusiveDayCount, formatLocalDate } from '@shared/lib/date';
-import { normalizeCategory, type NormalizedExpenseCategory } from '@entities/expense';
+import { normalizeCategory, type NormalizedExpenseCategory, PAYMENT_METHOD_OPTIONS } from '@entities/expense';
 import styles from './ExpenseModal.module.css';
 
 /**
@@ -378,14 +378,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             <label className={styles.label}>Payment Method</label>
             <div className={styles.selectWrapper}>
               <select className={styles.select} {...register('paymentMethod')}>
-                <option value="Credit Card">Credit Card</option>
-                <option value="Apple Pay (Chase Sapphire)">Apple Pay (Chase Sapphire)</option>
-                <option value="Visa •••• 4012">Visa •••• 4012</option>
-                <option value="Mastercard">Mastercard</option>
-                <option value="Cash (JPY 2,860)">Cash (JPY Yen)</option>
-                <option value="Cash (USD)">Cash (USD)</option>
-                <option value="Suica IC Card">Suica IC Card</option>
-                <option value="Debit Card">Debit Card</option>
+                {PAYMENT_METHOD_OPTIONS.map((pm) => (
+                  <option key={pm.value} value={pm.value}>
+                    {pm.label}
+                  </option>
+                ))}
               </select>
               <span className={styles.selectChevron}>
                 <ChevronDown size={16} />

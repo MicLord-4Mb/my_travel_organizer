@@ -1,4 +1,12 @@
 import { z } from 'zod';
+import { EXPENSE_CATEGORY_OPTIONS } from '@entities/expense';
+
+type ExpenseCategoryValue = (typeof EXPENSE_CATEGORY_OPTIONS)[number]['value'];
+const categories = EXPENSE_CATEGORY_OPTIONS.map((o) => o.value) as [
+  ExpenseCategoryValue,
+  ...ExpenseCategoryValue[]
+];
+
 
 /**
  * Validation schema for expense entry and modification forms.
@@ -28,7 +36,7 @@ export const expenseSchema = z.object({
     .string()
     .min(1, 'Currency is required'),
   /** Budget categorization */
-  category: z.enum(['transport', 'lodging', 'dining', 'activities', 'shopping', 'other']),
+  category: z.enum(categories),
   /** Calendar date of transaction (YYYY-MM-DD) */
   date: z
     .string()

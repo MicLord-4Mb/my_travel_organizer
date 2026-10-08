@@ -1,4 +1,12 @@
 import { z } from 'zod';
+import { TRIP_STATUS_OPTIONS } from '@entities/trip';
+
+type TripStatusValue = (typeof TRIP_STATUS_OPTIONS)[number]['value'];
+const statuses = TRIP_STATUS_OPTIONS.map((o) => o.value) as [
+  TripStatusValue,
+  ...TripStatusValue[]
+];
+
 
 /**
  * Validation schema for Trip creation and edit forms.
@@ -23,7 +31,7 @@ export const tripSchema = z
     /** Trip end date in YYYY-MM-DD format */
     endDate: z.string().min(1, 'End date is required'),
     /** Current trip lifecycle status */
-    status: z.enum(['planned', 'in_progress', 'completed', 'cancelled']),
+    status: z.enum(statuses),
     /** Optional financial budget limit in base currency */
     budgetLimit: z.preprocess((val) => {
       if (val === '' || val === null || val === undefined || (typeof val === 'number' && isNaN(val))) return undefined;

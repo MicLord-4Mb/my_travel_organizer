@@ -5,6 +5,7 @@ import { Dialog, Input, Select, Button, useToast } from '@shared/ui';
 import type { Trip } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
 import { toDateInputValue, addDaysLocalDate } from '@shared/lib/date';
+import { TRIP_STATUS_OPTIONS } from '@entities/trip';
 import { tripSchema, type TripFormData } from '../model/tripSchema';
 import styles from './TripFormModal.module.css';
 
@@ -167,12 +168,7 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
           <Select
             label="Status"
             error={errors.status?.message}
-            options={[
-              { value: 'planned', label: 'Upcoming (Planned)' },
-              { value: 'in_progress', label: 'Active Now' },
-              { value: 'completed', label: 'Completed (Past)' },
-              { value: 'cancelled', label: 'Cancelled' },
-            ]}
+            options={TRIP_STATUS_OPTIONS as any}
             {...register('status')}
           />
         </div>

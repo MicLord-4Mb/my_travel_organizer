@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, LayoutGrid, Rows } from 'lucide-react';
 import { Tabs, Input, Select } from '@shared/ui';
+import { TRIP_SORT_OPTIONS } from '@entities/trip';
 import styles from './TripFilters.module.css';
 
 export type FilterStatus = 'all' | 'upcoming' | 'active' | 'past';
@@ -84,11 +85,7 @@ export const TripFilters: React.FC<TripFiltersProps> = ({
             <Select
               value={sortBy}
               onChange={(e) => onSortChange(e.target.value as SortOption)}
-              options={[
-                { value: 'soonest', label: 'Sort: Date (Soonest)' },
-                { value: 'budget', label: 'Sort: Budget (Highest)' },
-                { value: 'alphabetical', label: 'Sort: Alphabetical' },
-              ]}
+              options={TRIP_SORT_OPTIONS as any}
             />
           </div>
 
