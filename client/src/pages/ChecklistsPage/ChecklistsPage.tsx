@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  useGetTripsQuery,
   useGetChecklistsByTripIdQuery,
   useCreateChecklistItemMutation,
   useUpdateChecklistItemMutation,
   useDeleteChecklistItemMutation,
 } from '@shared/api/apiSlice';
+import { useActiveTrip } from '@entities/trip';
 import {
   AddChecklistItemModal,
   ApplyTemplateModal,
@@ -31,10 +31,11 @@ export const ChecklistsPage: React.FC = () => {
   const { id: routeTripId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: trips = [] } = useGetTripsQuery();
 
   // Selected Trip state
-  const [userSelectedTripId, setUserSelectedTripId] = useState<string>('');
+  const [userSelectedTripId, setUserSelectedTripId] = useState<string | null>(null);
+  const { activeTrip: currentTrip, status: tripStatus, allTrips: trips } = useActiveTrip(userSelectedTripId);
+  const effectiveTripId = currentTrip?.id;
 
   // UI Filter & Tab states
   const [filterUnchecked, setFilterUnchecked] = useState(false);
@@ -43,21 +44,6 @@ export const ChecklistsPage: React.FC = () => {
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
-
-  // Fetch trips on mount if not loaded automatically by RTK Query
-
-  const effectiveTripId = useMemo(() => {
-    if (routeTripId) return routeTripId;
-    if (userSelectedTripId) return userSelectedTripId;
-    if (trips.length > 0) {
-      const defaultTrip =
-        trips.find((t) => t.status === 'in_progress') ||
-        trips.find((t) => t.status === 'planned') ||
-        trips[0];
-      return defaultTrip.id;
-    }
-    return undefined; // use undefined to distinguish from empty string
-  }, [routeTripId, userSelectedTripId, trips]);
 
   // Fetch checklist for selected trip
   const { data: allItems = [], isLoading } = useGetChecklistsByTripIdQuery(effectiveTripId ?? '', {
@@ -68,12 +54,6 @@ export const ChecklistsPage: React.FC = () => {
   const [createChecklistItem] = useCreateChecklistItemMutation();
   const [updateChecklistItem] = useUpdateChecklistItemMutation();
   const [deleteChecklistItem] = useDeleteChecklistItemMutation();
-
-  const currentTrip = useMemo(() => {
-    if (!effectiveTripId && trips.length === 0) return null;
-    const found = trips.find((t) => t.id === effectiveTripId);
-    return found !== undefined ? found : undefined;
-  }, [trips, effectiveTripId]);
 
   // Filter items by selected trip
   const tripItems = useMemo(() => {
@@ -236,13 +216,24 @@ export const ChecklistsPage: React.FC = () => {
     }
   };
 
-  if (currentTrip === undefined) {
+  if (tripStatus === 'loading') {
+    return (
+      <div className={styles.page}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', gap: '1rem' }}>
+          <div style={{ width: 32, height: 32, border: '3px solid var(--color-border-subtle)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <span style={{ color: 'var(--color-text-secondary)', fontSize: '14px' }}>Loading checklist workspace...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (tripStatus === 'not_found' || (!currentTrip && routeTripId)) {
     return (
       <div className={styles.page}>
         <div style={{ padding: '3rem', textAlign: 'center' }}>
           <h2>404 - Trip Not Found</h2>
           <p>The trip you are looking for does not exist.</p>
-          <button onClick={() => navigate('/')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: '#0D9488', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          <button onClick={() => navigate('/')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
             Back to Trips
           </button>
         </div>
@@ -250,13 +241,13 @@ export const ChecklistsPage: React.FC = () => {
     );
   }
 
-  if (currentTrip === null) {
+  if (tripStatus === 'no_trips' || !currentTrip) {
     return (
       <div className={styles.page}>
         <div style={{ padding: '3rem', textAlign: 'center' }}>
           <h2>No Trips Available</h2>
           <p>Please return to the overview and create a trip.</p>
-          <button onClick={() => navigate('/')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: '#0D9488', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          <button onClick={() => navigate('/')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
             Go to Overview
           </button>
         </div>
@@ -316,13 +307,7 @@ export const ChecklistsPage: React.FC = () => {
           <div className={styles.columnsGrid}>
             {/* COLUMN 1: Pre-Trip Tasks & Formalities */}
             <section
-              className={styles.column}
-              style={{
-                display:
-                  typeof window !== 'undefined' && window.innerWidth < 768 && mobileTab !== 'pretrip'
-                    ? 'none'
-                    : 'flex',
-              }}
+              className={`${styles.column} ${mobileTab !== 'pretrip' ? styles.columnHiddenMobile : ''}`}
               aria-label="Pre-trip formalities"
             >
               <div className={styles.columnHeaderCard}>
@@ -367,13 +352,7 @@ export const ChecklistsPage: React.FC = () => {
 
             {/* COLUMN 2: Luggage & Packing Inventory */}
             <section
-              className={styles.column}
-              style={{
-                display:
-                  typeof window !== 'undefined' && window.innerWidth < 768 && mobileTab !== 'luggage'
-                    ? 'none'
-                    : 'flex',
-              }}
+              className={`${styles.column} ${mobileTab !== 'luggage' ? styles.columnHiddenMobile : ''}`}
               aria-label="Luggage inventory"
             >
               <div className={styles.columnHeaderCard}>

@@ -1,13 +1,13 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  useGetTripsQuery,
   useUpdateTripMutation,
   useGetEventsByTripIdQuery,
   useCreateEventMutation,
   useUpdateEventMutation,
   useDeleteEventMutation,
 } from '@shared/api/apiSlice';
+import { useActiveTrip } from '@entities/trip';
 import type { PlaceEvent, EventCategory } from '@shared/types/models';
 import type { ItineraryCategoryFilter, TransitMode } from '@entities/itinerary';
 import {
@@ -24,7 +24,7 @@ import {
 import { TripFormModal } from '@features/trip-management';
 import { useCurrency } from '@shared/lib/useCurrency';
 import { parseLocalDate, addDaysLocalDate, toDateInputValue } from '@shared/lib/date';
-import { useToast } from '@shared/ui';
+import { useToast, ConfirmDialog } from '@shared/ui';
 import styles from './TripDetailsPage.module.css';
 
 /**
@@ -43,23 +43,13 @@ export default function TripDetailsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { rates, baseCurrency } = useCurrency();
-  const { data: trips = [], isLoading: isTripsLoading } = useGetTripsQuery();
-  const tripStatus = isTripsLoading ? 'loading' : 'succeeded';
+  const { activeTrip, status: tripStatus } = useActiveTrip();
 
   // Local UI State
   const [activeDayIndex, setActiveDayIndex] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState<ItineraryCategoryFilter>('all');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [transitMode, setTransitMode] = useState<TransitMode>('walk');
-
-  const activeTrip = useMemo(() => {
-    if (!trips.length) return null;
-    if (routeTripId) {
-      const found = trips.find((t) => t.id === routeTripId);
-      return found !== undefined ? found : undefined;
-    }
-    return trips[0];
-  }, [trips, routeTripId]);
 
   const { data: allEvents = [] } = useGetEventsByTripIdQuery(activeTrip?.id ?? '', {
     skip: !activeTrip?.id,
@@ -161,23 +151,32 @@ export default function TripDetailsPage() {
     setIsEventModalOpen(true);
   };
 
-  const handleDeleteActivity = async (event: PlaceEvent) => {
-    if (!activeTrip) return;
-    if (window.confirm(`Are you sure you want to remove "${event.title}"?`)) {
-      try {
-        await deleteEvent({ id: event.id, tripId: activeTrip.id }).unwrap();
-        toast({
-          title: 'Deleted',
-          description: 'Activity successfully removed',
-          variant: 'success'
-        });
-      } catch (err) {
-        toast({
-          title: 'Error',
-          description: err instanceof Error ? err.message : 'Failed to delete activity',
-          variant: 'destructive'
-        });
-      }
+  const [eventToDelete, setEventToDelete] = useState<PlaceEvent | null>(null);
+  const [isDeletingEvent, setIsDeletingEvent] = useState(false);
+
+  const handleDeleteActivity = (event: PlaceEvent) => {
+    setEventToDelete(event);
+  };
+
+  const handleConfirmDeleteActivity = async () => {
+    if (!activeTrip || !eventToDelete) return;
+    try {
+      setIsDeletingEvent(true);
+      await deleteEvent({ id: eventToDelete.id, tripId: activeTrip.id }).unwrap();
+      toast({
+        title: 'Deleted',
+        description: 'Activity successfully removed',
+        variant: 'success'
+      });
+      setEventToDelete(null);
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to delete activity',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsDeletingEvent(false);
     }
   };
 
@@ -245,7 +244,7 @@ export default function TripDetailsPage() {
     }
   };
 
-  if (!activeTrip && tripStatus === 'loading') {
+  if (tripStatus === 'loading') {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner} />
@@ -254,7 +253,7 @@ export default function TripDetailsPage() {
     );
   }
 
-  if (activeTrip === undefined) {
+  if (tripStatus === 'not_found' || !activeTrip) {
     return (
       <div className={styles.emptyContainer}>
         <h2>404 - Trip Not Found</h2>
@@ -266,7 +265,7 @@ export default function TripDetailsPage() {
     );
   }
 
-  if (activeTrip === null) {
+  if (tripStatus === 'no_trips') {
     return (
       <div className={styles.emptyContainer}>
         <h2>No Trips Available</h2>
@@ -355,6 +354,20 @@ export default function TripDetailsPage() {
           }}
         />
       )}
+
+      {/* Delete Activity Confirmation Dialog */}
+      <ConfirmDialog
+        open={Boolean(eventToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setEventToDelete(null);
+        }}
+        title="Remove Itinerary Stop"
+        description={`Are you sure you want to remove "${eventToDelete?.title}" from your schedule?`}
+        confirmLabel="Remove Activity"
+        variant="destructive"
+        isLoading={isDeletingEvent}
+        onConfirm={handleConfirmDeleteActivity}
+      />
     </div>
   );
 }

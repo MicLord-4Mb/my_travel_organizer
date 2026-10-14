@@ -3,11 +3,13 @@ import { useSearchParams } from 'react-router-dom';
 
 import {
   useGetTripsQuery,
+  useGetExpensesQuery,
+  useGetChecklistsQuery,
   useCreateTripMutation,
   useUpdateTripMutation,
   useDeleteTripMutation,
 } from '@shared/api/apiSlice';
-import type { Trip } from '@shared/types/models';
+import type { Trip, Expense, ChecklistItem } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
 import { TripFormModal, type TripFormData } from '@features/trip-management';
 import { KpiTicker } from './components/KpiTicker/KpiTicker';
@@ -17,9 +19,9 @@ import {
   type SortOption,
   type ViewMode,
 } from './components/TripFilters/TripFilters';
-import { TripCard } from './components/TripCard/TripCard';
+import { TripCard } from '@entities/trip';
 import { EmptyState } from './components/EmptyState/EmptyState';
-import { useToast } from '@shared/ui';
+import { useToast, ConfirmDialog } from '@shared/ui';
 import styles from './TripsPage.module.css';
 
 /** Base currency used for normalizing dashboard-wide KPI metrics and aggregates. */
@@ -40,6 +42,8 @@ export const TripsPage: React.FC = () => {
   const { sum, baseCurrency } = useCurrency();
   const reportingCurrency = baseCurrency || REPORTING_CURRENCY;
   const { data: trips = [], isLoading, isFetching } = useGetTripsQuery();
+  const { data: allExpenses = [] } = useGetExpensesQuery();
+  const { data: allChecklists = [] } = useGetChecklistsQuery();
   const [createTrip] = useCreateTripMutation();
   const [updateTrip] = useUpdateTripMutation();
   const [deleteTrip] = useDeleteTripMutation();
@@ -96,6 +100,33 @@ export const TripsPage: React.FC = () => {
     };
   }, [trips]);
 
+  // Group expenses and checklists by tripId for O(1) card lookups without N+1 requests
+  const expensesByTripId = useMemo(() => {
+    const map = new Map<string, Expense[]>();
+    for (const exp of allExpenses) {
+      const list = map.get(exp.tripId);
+      if (list) {
+        list.push(exp);
+      } else {
+        map.set(exp.tripId, [exp]);
+      }
+    }
+    return map;
+  }, [allExpenses]);
+
+  const checklistsByTripId = useMemo(() => {
+    const map = new Map<string, ChecklistItem[]>();
+    for (const item of allChecklists) {
+      const list = map.get(item.tripId);
+      if (list) {
+        list.push(item);
+      } else {
+        map.set(item.tripId, [item]);
+      }
+    }
+    return map;
+  }, [allChecklists]);
+
   // Compute KPI Ticker Metrics (real data only, no placeholder numbers)
   const kpiMetrics = useMemo(() => {
     // Unique destinations or total active/upcoming trips
@@ -106,17 +137,14 @@ export const TripsPage: React.FC = () => {
       activeOrUpcoming.map((t) => t.location?.split(',')[0].trim() || t.title)
     );
 
-    const spentBudget = sum(
-      trips.map((t) => ({ amount: t.spentBudget, currency: t.currency })),
-      reportingCurrency
-    );
+    const spentBudget = sum(allExpenses, reportingCurrency);
     const totalBudget = sum(
       trips.map((t) => ({ amount: t.budgetLimit, currency: t.currency })),
       reportingCurrency
     );
 
-    const totalPacked = trips.reduce((acc, t) => acc + (t.packedCount ?? 0), 0);
-    const totalItems = trips.reduce((acc, t) => acc + (t.totalChecklistCount ?? 0), 0);
+    const totalPacked = allChecklists.filter((c) => c.isCompleted).length;
+    const totalItems = allChecklists.length;
     // `null` = there is no checklist item yet, so readiness is undefined rather than 0%.
     const readinessPercentage =
       totalItems > 0 ? Math.round((totalPacked / totalItems) * 100) : null;
@@ -127,7 +155,7 @@ export const TripsPage: React.FC = () => {
       totalBudget,
       readinessPercentage,
     };
-  }, [trips, sum, reportingCurrency]);
+  }, [trips, allExpenses, allChecklists, sum, reportingCurrency]);
 
   // Filter and sort trips
   const filteredAndSortedTrips = useMemo(() => {
@@ -183,7 +211,13 @@ export const TripsPage: React.FC = () => {
       const tripToDup = trips.find((t) => t.id === tripId);
       if (tripToDup) {
         const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = tripToDup;
-        await createTrip({ ...rest, title: `${rest.title} (Copy)` }).unwrap();
+        await createTrip({
+          ...rest,
+          title: `${rest.title} (Copy)`,
+          spentBudget: 0,
+          packedCount: 0,
+          totalChecklistCount: 0,
+        }).unwrap();
         toast({
           title: 'Success',
           description: 'Trip duplicated successfully',
@@ -199,22 +233,32 @@ export const TripsPage: React.FC = () => {
     }
   };
 
-  const handleDeleteTrip = async (tripId: string) => {
-    if (window.confirm('Are you sure you want to delete this trip workspace?')) {
-      try {
-        await deleteTrip(tripId).unwrap();
-        toast({
-          title: 'Deleted',
-          description: 'Trip deleted successfully',
-          variant: 'success'
-        });
-      } catch (err) {
-        toast({
-          title: 'Error',
-          description: err instanceof Error ? err.message : 'Failed to delete trip',
-          variant: 'destructive'
-        });
-      }
+  const [tripToDeleteId, setTripToDeleteId] = useState<string | null>(null);
+  const [isDeletingTrip, setIsDeletingTrip] = useState(false);
+
+  const handleDeleteTrip = (tripId: string) => {
+    setTripToDeleteId(tripId);
+  };
+
+  const handleConfirmDeleteTrip = async () => {
+    if (!tripToDeleteId) return;
+    try {
+      setIsDeletingTrip(true);
+      await deleteTrip(tripToDeleteId).unwrap();
+      toast({
+        title: 'Deleted',
+        description: 'Trip deleted successfully',
+        variant: 'success'
+      });
+      setTripToDeleteId(null);
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to delete trip',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsDeletingTrip(false);
     }
   };
 
@@ -275,16 +319,27 @@ export const TripsPage: React.FC = () => {
             className={viewMode === 'grid' ? styles.tripsGrid : styles.tripsList}
             id="tripsContainer"
           >
-            {filteredAndSortedTrips.map((trip) => (
-              <TripCard
-                key={trip.id}
-                trip={trip}
-                viewMode={viewMode}
-                onEdit={handleEditTrip}
-                onDuplicate={handleDuplicateTrip}
-                onDelete={handleDeleteTrip}
-              />
-            ))}
+            {filteredAndSortedTrips.map((trip) => {
+              const tripExp = expensesByTripId.get(trip.id) || [];
+              const tripChk = checklistsByTripId.get(trip.id) || [];
+              const tripSpent = sum(tripExp, trip.currency || 'USD');
+              const tripPacked = tripChk.filter((c) => c.isCompleted).length;
+              const tripTotalChecklist = tripChk.length;
+
+              return (
+                <TripCard
+                  key={trip.id}
+                  trip={trip}
+                  viewMode={viewMode}
+                  spentBudget={tripSpent}
+                  packedCount={tripPacked}
+                  totalChecklistCount={tripTotalChecklist}
+                  onEdit={handleEditTrip}
+                  onDuplicate={handleDuplicateTrip}
+                  onDelete={handleDeleteTrip}
+                />
+              );
+            })}
           </div>
         ) : (
           <EmptyState
@@ -324,6 +379,20 @@ export const TripsPage: React.FC = () => {
         onOpenChange={handleModalOpenChange}
         tripToEdit={tripToEdit}
         onSubmit={handleFormSubmit}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={Boolean(tripToDeleteId)}
+        onOpenChange={(open) => {
+          if (!open) setTripToDeleteId(null);
+        }}
+        title="Delete Trip Workspace"
+        description="Are you sure you want to delete this trip workspace? All associated events, checklists, and expenses will be permanently removed."
+        confirmLabel="Delete Trip"
+        variant="destructive"
+        isLoading={isDeletingTrip}
+        onConfirm={handleConfirmDeleteTrip}
       />
     </div>
   );

@@ -1,47 +1,52 @@
 import { createBrowserRouter } from 'react-router-dom';
-import TripsPage from '@pages/TripsPage';
-import TripDetailsPage from '@pages/TripDetailsPage';
-import ChecklistsPage from '@pages/ChecklistsPage';
-import BudgetPage from '@pages/BudgetPage';
-import NotFoundPage from '@pages/NotFoundPage';
+import { RouteErrorBoundary } from '@shared/ui';
 import App from '@app/App';
+import {
+  LazyRoute,
+  LazyTripsPage,
+  LazyTripDetailsPage,
+  LazyChecklistsPage,
+  LazyBudgetPage,
+  LazyNotFoundPage,
+} from './LazyRoute';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         index: true,
-        element: <TripsPage />,
+        element: <LazyRoute Component={LazyTripsPage} />,
       },
       {
         path: 'trips/:id',
-        element: <TripDetailsPage />,
+        element: <LazyRoute Component={LazyTripDetailsPage} />,
       },
       {
         path: 'itinerary',
-        element: <TripDetailsPage />,
+        element: <LazyRoute Component={LazyTripDetailsPage} />,
       },
       {
         path: 'trips/:id/budget',
-        element: <BudgetPage />,
+        element: <LazyRoute Component={LazyBudgetPage} />,
       },
       {
         path: 'budget',
-        element: <BudgetPage />,
+        element: <LazyRoute Component={LazyBudgetPage} />,
       },
       {
         path: 'trips/:id/checklists',
-        element: <ChecklistsPage />,
+        element: <LazyRoute Component={LazyChecklistsPage} />,
       },
       {
         path: 'checklists',
-        element: <ChecklistsPage />,
+        element: <LazyRoute Component={LazyChecklistsPage} />,
       },
       {
         path: '*',
-        element: <NotFoundPage />,
+        element: <LazyRoute Component={LazyNotFoundPage} />,
       },
     ],
   },

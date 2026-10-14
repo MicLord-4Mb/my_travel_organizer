@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ChecklistItem } from '@shared/types/models';
-import { ChecklistRow } from '../ChecklistRow/ChecklistRow';
+import { ChecklistRow } from '@entities/checklist';
 import styles from './ChecklistSection.module.css';
 
 export interface ChecklistSectionProps {

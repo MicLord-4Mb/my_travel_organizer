@@ -32,7 +32,7 @@ export const TripContextHeader: React.FC<TripContextHeaderProps> = ({
   onEditTrip,
 }) => {
   const navigate = useNavigate();
-  const { format } = useCurrency();
+  const { format, sum } = useCurrency();
   const [copied, setCopied] = useState(false);
 
   const { data: tripExpenses = [] } = useGetExpensesByTripIdQuery(trip.id);
@@ -65,7 +65,7 @@ export const TripContextHeader: React.FC<TripContextHeaderProps> = ({
   };
 
   // Real values only: a missing budget limit / empty checklist is shown as such.
-  const spent = tripExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const spent = sum(tripExpenses, trip.currency || 'USD');
   const limit = trip.budgetLimit ?? 0;
   const hasBudget = limit > 0;
   const budgetPercent = hasBudget ? Math.min(100, Math.round((spent / limit) * 100)) : 0;

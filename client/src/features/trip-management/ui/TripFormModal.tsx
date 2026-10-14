@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useEffect, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { z } from 'zod';
 import { Dialog, Input, Select, Button, useToast } from '@shared/ui';
 import type { Trip } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
@@ -64,21 +65,29 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
     refetchCurrencies,
   } = useCurrency();
 
+  const [defaultDates] = useState(() => {
+    const today = new Date();
+    return {
+      startDate: toDateInputValue(today),
+      endDate: toDateInputValue(addDaysLocalDate(today, 7)),
+    };
+  });
+
   const {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<TripFormData>({
-    resolver: zodResolver(tripSchema) as any,
+  } = useForm<z.input<typeof tripSchema>, unknown, z.output<typeof tripSchema>>({
+    resolver: zodResolver(tripSchema),
     defaultValues: {
       title: '',
       description: '',
       location: '',
-      startDate: toDateInputValue(new Date()),
-      endDate: toDateInputValue(addDaysLocalDate(new Date(), 7)),
+      startDate: defaultDates.startDate,
+      endDate: defaultDates.endDate,
       status: 'planned',
       budgetLimit: 2000,
       currency: baseCurrency || 'USD',
@@ -86,7 +95,7 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
     },
   });
 
-  const selectedCover = watch('coverImageUrl');
+  const selectedCover = useWatch({ control, name: 'coverImageUrl' });
 
   useEffect(() => {
     if (open) {

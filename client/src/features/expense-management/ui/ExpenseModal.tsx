@@ -1,6 +1,7 @@
-import React, { useEffect, useId } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useEffect, useId, useState, useMemo } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { z } from 'zod';
 import {
   Plane,
   Hotel,
@@ -106,22 +107,25 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   const descId = useId();
   const amountId = useId();
   const notesId = useId();
+  const categoryGroupId = useId();
+
+  const [initialDate] = useState(() => toDateInputValue(new Date()));
 
   const {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<ExpenseFormData>({
-    resolver: zodResolver(expenseSchema) as any,
+  } = useForm<z.input<typeof expenseSchema>, unknown, z.output<typeof expenseSchema>>({
+    resolver: zodResolver(expenseSchema),
     defaultValues: {
       title: '',
       amount: 25.0,
       currency: trip.currency || 'USD',
       category: 'dining',
-      date: toDateInputValue(new Date()),
+      date: initialDate,
       dayIndex: 1,
       paymentMethod: 'Credit Card',
       notes: '',
@@ -129,31 +133,34 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
     },
   });
 
-  const selectedCategory = watch('category');
-  const selectedAmount = watch('amount');
-  const selectedCurrency = watch('currency') || trip.currency || 'USD';
+  const selectedCategory = useWatch({ control, name: 'category' });
+  const selectedAmount = useWatch({ control, name: 'amount' });
+  const selectedCurrencyWatch = useWatch({ control, name: 'currency' });
+  const selectedCurrency = selectedCurrencyWatch || trip.currency || 'USD';
 
   // Calculate day list from trip dates
-  const daysList: Array<{ label: string; value: number }> = [
-    { label: 'Pre-Trip Booking', value: -1 },
-  ];
-  if (trip.startDate) {
-    const diffDays = inclusiveDayCount(trip.startDate, trip.endDate || trip.startDate);
-    const start = parseLocalDate(trip.startDate);
-    const todayStr = toDateInputValue(new Date());
+  const daysList = useMemo(() => {
+    const list: Array<{ label: string; value: number }> = [
+      { label: 'Pre-Trip Booking', value: -1 },
+    ];
+    if (trip.startDate) {
+      const diffDays = inclusiveDayCount(trip.startDate, trip.endDate || trip.startDate);
+      const start = parseLocalDate(trip.startDate);
 
-    if (start) {
-      for (let i = 0; i < diffDays; i++) {
-        const d = addDaysLocalDate(start, i);
-        const dateStr = formatLocalDate(d, { month: 'short', day: 'numeric' });
-        const isToday = toDateInputValue(d) === todayStr;
-        daysList.push({
-          label: `Day ${i + 1} • ${dateStr}${isToday ? ' (Today)' : ''}`,
-          value: i,
-        });
+      if (start) {
+        for (let i = 0; i < diffDays; i++) {
+          const d = addDaysLocalDate(start, i);
+          const dateStr = formatLocalDate(d, { month: 'short', day: 'numeric' });
+          const isToday = toDateInputValue(d) === initialDate;
+          list.push({
+            label: `Day ${i + 1} • ${dateStr}${isToday ? ' (Today)' : ''}`,
+            value: i,
+          });
+        }
       }
     }
-  }
+    return list;
+  }, [trip.startDate, trip.endDate, initialDate]);
 
   useEffect(() => {
     if (open) {
@@ -322,17 +329,22 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
         {/* Category Picker (Interactive Cards) */}
         <div className={styles.fieldGroup}>
-          <label className={styles.label}>
+          <label id={categoryGroupId} className={styles.label}>
             Category <span className={styles.required}>*</span>
           </label>
-          <div className={styles.categoryGrid}>
+          <div
+            className={styles.categoryGrid}
+            role="radiogroup"
+            aria-labelledby={categoryGroupId}
+          >
             {CATEGORIES.map((cat) => {
               const isSelected = selectedCategory === cat.key;
               return (
                 <div
                   key={cat.key}
-                  role="button"
-                  tabIndex={0}
+                  role="radio"
+                  aria-checked={isSelected}
+                  tabIndex={isSelected ? 0 : -1}
                   data-cat={cat.key}
                   className={`${styles.categoryCard} ${isSelected ? styles.categoryCardActive : ''}`}
                   onClick={() => setValue('category', cat.key, { shouldValidate: true })}

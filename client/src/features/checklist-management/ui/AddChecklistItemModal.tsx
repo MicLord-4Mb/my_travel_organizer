@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, Input, Select, Button } from '@shared/ui';
 import { CHECKLIST_TYPE_OPTIONS, CHECKLIST_CATEGORIES_BY_TYPE, CHECKLIST_PRIORITY_OPTIONS } from '@entities/checklist';
@@ -26,7 +26,7 @@ export const AddChecklistItemModal: React.FC<AddChecklistItemModalProps> = ({
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<ChecklistItemFormData>({
@@ -40,8 +40,8 @@ export const AddChecklistItemModal: React.FC<AddChecklistItemModalProps> = ({
     },
   });
 
-  const selectedType = watch('type');
-  const selectedCategory = watch('category');
+  const selectedType = useWatch({ control, name: 'type' });
+  const selectedCategory = useWatch({ control, name: 'category' });
 
   useEffect(() => {
     if (selectedType === 'luggage' && selectedCategory === 'documents') {

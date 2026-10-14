@@ -1,7 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { createLogger } from 'redux-logger';
 import { reduxProdErrorLogger } from '@app/middleware/reduxProdErrorLogger';
 import { apiSlice } from '@shared/api/apiSlice';
+
+import { devLogger } from '@app/middleware/devLogger';
 
 /**
  * Global Redux Store Configuration.
@@ -17,12 +18,7 @@ export const store = configureStore({
   },
   middleware: (getDefaultMiddleware) => {
     const baseMiddleware = getDefaultMiddleware().concat(apiSlice.middleware);
-    if (import.meta.env.DEV) {
-      const devLogger = createLogger({
-        collapsed: true,
-        duration: true,
-        timestamp: true,
-      });
+    if (import.meta.env.DEV && devLogger) {
       return baseMiddleware.concat(devLogger);
     }
     return baseMiddleware.concat(reduxProdErrorLogger);

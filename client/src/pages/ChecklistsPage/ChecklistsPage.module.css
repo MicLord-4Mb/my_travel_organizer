@@ -83,6 +83,12 @@
   gap: var(--space-md);
 }
 
+@media (max-width: 767px) {
+  .columnHiddenMobile {
+    display: none;
+  }
+}
+
 /* Column Header Card */
 .columnHeaderCard {
   background-color: var(--color-surface);

@@ -7,12 +7,13 @@ import {
   normalizeCategory
 } from '@entities/expense';
 import {
-  useGetTripsQuery,
   useGetExpensesByTripIdQuery,
+  useGetEventsByTripIdQuery,
   useCreateExpenseMutation,
   useUpdateExpenseMutation,
   useDeleteExpenseMutation,
 } from '@shared/api/apiSlice';
+import { useActiveTrip } from '@entities/trip';
 import {
   BudgetHeader,
   FinancialKpiTicker,
@@ -31,8 +32,8 @@ export const BudgetPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currencies, rates, baseCurrency } = useCurrency();
-  const { data: trips = [] } = useGetTripsQuery();
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const { activeTrip, status: tripStatus, allTrips: trips } = useActiveTrip(selectedTripId);
 
   // Local state for filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,22 +47,14 @@ export const BudgetPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
 
-  // Determine active trip directly from RTK Query store
-  const activeTrip = useMemo(() => {
-    if (!trips.length) return null;
-    const targetId = routeTripId || selectedTripId;
-    if (targetId) {
-      const found = trips.find((t) => t.id === targetId);
-      return found !== undefined ? found : undefined;
-    }
-    return trips[0];
-  }, [trips, routeTripId, selectedTripId]);
-
   // Derived display currency directly from RTK Query active trip without useEffect synchronization
   const displayCurrency = currencyOverride ?? activeTrip?.currency ?? baseCurrency ?? 'USD';
 
   const activeTripId = activeTrip?.id;
   const { data: expenses = [] } = useGetExpensesByTripIdQuery(activeTripId ?? '', {
+    skip: !activeTripId,
+  });
+  const { data: tripEvents = [] } = useGetEventsByTripIdQuery(activeTripId ?? '', {
     skip: !activeTripId,
   });
 
@@ -193,7 +186,18 @@ export const BudgetPage: React.FC = () => {
     }
   };
 
-  if (activeTrip === undefined) {
+  if (tripStatus === 'loading') {
+    return (
+      <div className={styles.pageContainer}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', gap: '1rem' }}>
+          <div style={{ width: 32, height: 32, border: '3px solid var(--color-border-subtle)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <span style={{ color: 'var(--color-text-secondary)', fontSize: '14px' }}>Loading budget workspace...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (tripStatus === 'not_found' || (!activeTrip && routeTripId)) {
     return (
       <div className={styles.pageContainer}>
         <div className={styles.emptyState}>
@@ -202,7 +206,7 @@ export const BudgetPage: React.FC = () => {
           </div>
           <h2 className={styles.emptyTitle}>404 - Trip Not Found</h2>
           <p>The trip you are looking for does not exist.</p>
-          <button onClick={() => navigate('/')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: '#0D9488', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          <button onClick={() => navigate('/')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
             Back to Trips
           </button>
         </div>
@@ -210,7 +214,7 @@ export const BudgetPage: React.FC = () => {
     );
   }
 
-  if (activeTrip === null || !budgetAnalytics) {
+  if (tripStatus === 'no_trips' || !activeTrip || !budgetAnalytics) {
     return (
       <div className={styles.pageContainer}>
         <div className={styles.emptyState}>
@@ -219,7 +223,7 @@ export const BudgetPage: React.FC = () => {
           </div>
           <h2 className={styles.emptyTitle}>No Trip Selected</h2>
           <p>Please select a trip or plan a new one to track your budget.</p>
-          <button onClick={() => navigate('/')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: '#0D9488', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          <button onClick={() => navigate('/')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
             Go to Overview
           </button>
         </div>
@@ -279,6 +283,7 @@ export const BudgetPage: React.FC = () => {
         onOpenChange={setIsModalOpen}
         expenseToEdit={expenseToEdit}
         trip={activeTrip}
+        events={tripEvents}
         onSubmit={handleFormSubmit}
       />
     </div>

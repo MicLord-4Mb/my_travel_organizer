@@ -21,7 +21,12 @@ const statuses = TRIP_STATUS_OPTIONS.map((o) => o.value) as [
 export const tripSchema = z
   .object({
     /** Human-readable trip title */
-    title: z.string().min(2, 'Title must be at least 2 characters').max(80, 'Title is too long'),
+    title: z
+      .string()
+      .trim()
+      .min(1, 'Title is required')
+      .min(2, 'Title must be at least 2 characters')
+      .max(80, 'Title is too long'),
     /** Optional detailed memo or notes */
     description: z.string().optional(),
     /** Destination city, country, or region */
@@ -40,7 +45,11 @@ export const tripSchema = z
     /** Base ISO 4217 currency code */
     currency: z.string().min(1, 'Currency is required'),
     /** Cover photo image URL */
-    coverImageUrl: z.string().optional(),
+    coverImageUrl: z
+      .string()
+      .url('Cover image must be a valid URL')
+      .optional()
+      .or(z.literal('')),
   })
   .refine(
     (data) => {

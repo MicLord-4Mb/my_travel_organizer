@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useEffect, useId } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { z } from 'zod';
 import {
   Train,
   Hotel,
@@ -20,6 +21,7 @@ import {
   type PlaceEventFormData,
 } from '../model/placeEventSchema';
 import { parseLocalDate, addDaysLocalDate, formatLocalDate } from '@shared/lib/date';
+import { useCurrency } from '@shared/lib/useCurrency';
 import styles from './PlaceEventModal.module.css';
 
 /**
@@ -99,15 +101,29 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
   onSubmit,
 }) => {
   const { toast } = useToast();
+  const { currencies } = useCurrency();
+  const titleId = useId();
+  const dayIndexId = useId();
+  const startTimeId = useId();
+  const endTimeId = useId();
+  const costId = useId();
+  const currencyId = useId();
+  const locationNameId = useId();
+  const addressId = useId();
+  const latId = useId();
+  const lngId = useId();
+  const bookingRefId = useId();
+  const notesId = useId();
+
   const {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<PlaceEventFormData>({
-    resolver: zodResolver(placeEventSchema) as any,
+  } = useForm<z.input<typeof placeEventSchema>, unknown, z.output<typeof placeEventSchema>>({
+    resolver: zodResolver(placeEventSchema),
     defaultValues: {
       title: '',
       category: defaultCategory,
@@ -125,7 +141,7 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
     },
   });
 
-  const selectedCategory = watch('category');
+  const selectedCategory = useWatch({ control, name: 'category' });
 
   useEffect(() => {
     if (open) {
@@ -234,11 +250,12 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
 
         {/* Title */}
         <div className={styles.field}>
-          <label className={styles.label}>
+          <label htmlFor={titleId} className={styles.label}>
             <span>Activity / Place Name</span>
             <span className={styles.required}>*</span>
           </label>
           <input
+            id={titleId}
             type="text"
             placeholder="e.g. Breakfast at Bills Omotesando"
             className={`${styles.input} ${errors.title ? styles.inputError : ''}`}
@@ -252,11 +269,11 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
         {/* Day, Start Time, End Time */}
         <div className={styles.rowThree}>
           <div className={styles.field}>
-            <label className={styles.label}>
+            <label htmlFor={dayIndexId} className={styles.label}>
               <Calendar size={14} />
               <span>Assigned Day</span>
             </label>
-            <select className={styles.select} {...register('dayIndex')}>
+            <select id={dayIndexId} className={styles.select} {...register('dayIndex')}>
               {Array.from({ length: Math.max(totalDays, 1) }, (_, i) => (
                 <option key={i} value={i}>
                   {getDayLabel(i)}
@@ -266,11 +283,12 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>
+            <label htmlFor={startTimeId} className={styles.label}>
               <Clock size={14} />
               <span>Start Time</span>
             </label>
             <input
+              id={startTimeId}
               type="time"
               className={`${styles.input} ${errors.startTime ? styles.inputError : ''
                 }`}
@@ -282,11 +300,12 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>
+            <label htmlFor={endTimeId} className={styles.label}>
               <Clock size={14} />
               <span>End Time</span>
             </label>
             <input
+              id={endTimeId}
               type="time"
               className={`${styles.input} ${errors.endTime ? styles.inputError : ''
                 }`}
@@ -301,11 +320,12 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
         {/* Cost & Currency */}
         <div className={styles.row}>
           <div className={styles.field}>
-            <label className={styles.label}>
+            <label htmlFor={costId} className={styles.label}>
               <DollarSign size={14} />
               <span>Estimated Cost</span>
             </label>
             <input
+              id={costId}
               type="number"
               step="any"
               min="0"
@@ -319,15 +339,15 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>
+            <label htmlFor={currencyId} className={styles.label}>
               <span>Currency</span>
             </label>
-            <select className={styles.select} {...register('currency')}>
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="JPY">JPY (¥)</option>
-              <option value="GBP">GBP (£)</option>
-              <option value="ILS">ILS (₪)</option>
+            <select id={currencyId} className={styles.select} {...register('currency')}>
+              {currencies.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.code} ({c.symbol})
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -335,11 +355,12 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
         {/* Location & Address */}
         <div className={styles.row}>
           <div className={styles.field}>
-            <label className={styles.label}>
+            <label htmlFor={locationNameId} className={styles.label}>
               <MapPin size={14} />
               <span>Location / Spot Area</span>
             </label>
             <input
+              id={locationNameId}
               type="text"
               placeholder="e.g. Jingumae, Shibuya"
               className={styles.input}
@@ -348,10 +369,11 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>
+            <label htmlFor={addressId} className={styles.label}>
               <span>Specific Address</span>
             </label>
             <input
+              id={addressId}
               type="text"
               placeholder="e.g. 4-30-3 Jingumae, Shibuya, Tokyo"
               className={styles.input}
@@ -363,10 +385,11 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
         {/* Coordinates (Optional lat/lng) */}
         <div className={styles.row}>
           <div className={styles.field}>
-            <label className={styles.label}>
+            <label htmlFor={latId} className={styles.label}>
               <span>Latitude (Optional)</span>
             </label>
             <input
+              id={latId}
               type="number"
               step="any"
               placeholder="e.g. 35.6672"
@@ -376,10 +399,11 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>
+            <label htmlFor={lngId} className={styles.label}>
               <span>Longitude (Optional)</span>
             </label>
             <input
+              id={lngId}
               type="number"
               step="any"
               placeholder="e.g. 139.7061"
@@ -391,11 +415,12 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
 
         {/* Booking Reference & Notes */}
         <div className={styles.field}>
-          <label className={styles.label}>
+          <label htmlFor={bookingRefId} className={styles.label}>
             <Bookmark size={14} />
             <span>Booking Ref / Confirmation #</span>
           </label>
           <input
+            id={bookingRefId}
             type="text"
             placeholder="e.g. Ref #HG-890211 or Ticket QR Slot 17:00"
             className={styles.input}
@@ -404,11 +429,12 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label}>
+          <label htmlFor={notesId} className={styles.label}>
             <FileText size={14} />
             <span>Notes, Tips & Booking Details</span>
           </label>
           <textarea
+            id={notesId}
             placeholder="e.g. Bring comfortable walking shoes, sake barrels photo spot, table reserved under Alex"
             className={styles.textarea}
             {...register('notes')}

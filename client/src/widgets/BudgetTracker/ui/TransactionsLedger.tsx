@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Search,
   X,
@@ -17,7 +17,7 @@ import {
   Wallet,
   ChevronDown,
 } from 'lucide-react';
-import { Badge, Button } from '@shared/ui';
+import { Badge, Button, ConfirmDialog } from '@shared/ui';
 import type { Expense, Trip, EntityId } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
 import {
@@ -75,6 +75,14 @@ export const TransactionsLedger: React.FC<TransactionsLedgerProps> = ({
   onDeleteExpense,
 }) => {
   const { convert, format, sum } = useCurrency();
+  const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
+
+  const handleConfirmDelete = () => {
+    if (expenseToDelete) {
+      onDeleteExpense(expenseToDelete.id);
+      setExpenseToDelete(null);
+    }
+  };
 
   // Days options calculation
   const dayOptions: Array<{ label: string; value: string }> = [
@@ -435,11 +443,7 @@ export const TransactionsLedger: React.FC<TransactionsLedgerProps> = ({
                           type="button"
                           className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
                           title="Delete Expense"
-                          onClick={() => {
-                            if (window.confirm(`Delete expense "${expense.title}"?`)) {
-                              onDeleteExpense(expense.id);
-                            }
-                          }}
+                          onClick={() => setExpenseToDelete(expense)}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -463,6 +467,19 @@ export const TransactionsLedger: React.FC<TransactionsLedgerProps> = ({
           ({expenses.length} of {allExpensesCount} items shown)
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={Boolean(expenseToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setExpenseToDelete(null);
+        }}
+        title="Delete Expense"
+        description={`Are you sure you want to delete expense "${expenseToDelete?.title}"?`}
+        confirmLabel="Delete Expense"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 };
