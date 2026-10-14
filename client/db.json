@@ -98,7 +98,7 @@
       "id": "mock-event-d1-1",
       "tripId": "mock-trip-1",
       "dayIndex": 0,
-      "order": 0,
+      "order": 1,
       "title": "Check-in at Hotel Gracery Shinjuku",
       "category": "lodging",
       "startTime": "14:00",
@@ -114,7 +114,7 @@
       "notes": "Ref #HG-890211 • 8th Fl Terrace Godzilla",
       "bookingRef": "HG-890211",
       "createdAt": "2026-10-12T14:00:00.000Z",
-      "updatedAt": "2026-10-07T20:47:06.691Z"
+      "updatedAt": "2026-10-14T17:34:44.090Z"
     },
     {
       "id": "mock-event-d1-2",
@@ -135,13 +135,13 @@
       },
       "notes": "Explore neon-lit alleyways & photography",
       "createdAt": "2026-10-12T17:30:00.000Z",
-      "updatedAt": "2026-10-07T20:47:06.691Z"
+      "updatedAt": "2026-10-14T17:34:44.090Z"
     },
     {
       "id": "mock-event-d1-3",
       "tripId": "mock-trip-1",
       "dayIndex": 0,
-      "order": 1,
+      "order": 0,
       "title": "Roppongi Robata & Sake Bar",
       "category": "dining",
       "startTime": "20:00",
@@ -156,7 +156,7 @@
       },
       "notes": "Charcoal grill seasonal omakase",
       "createdAt": "2026-10-12T20:00:00.000Z",
-      "updatedAt": "2026-10-07T20:47:06.691Z"
+      "updatedAt": "2026-10-14T17:34:44.089Z"
     },
     {
       "id": "mock-event-1",
@@ -178,7 +178,7 @@
       "notes": "Reserved table for 2 • Famous ricotta hotcakes",
       "bookingRef": "RES-BILLS-92",
       "createdAt": "2026-10-13T08:30:00.000Z",
-      "updatedAt": "2026-10-13T08:30:00.000Z"
+      "updatedAt": "2026-10-14T17:36:33.661Z"
     },
     {
       "id": "mock-event-2",
@@ -199,7 +199,7 @@
       },
       "notes": "Bring comfortable walking shoes • Sake barrels photo spot",
       "createdAt": "2026-10-13T10:00:00.000Z",
-      "updatedAt": "2026-10-13T10:00:00.000Z"
+      "updatedAt": "2026-10-14T17:36:33.662Z"
     },
     {
       "id": "mock-event-3",
@@ -220,13 +220,13 @@
       },
       "notes": "Expect 20 min solo booth queue • Tonkotsu extra chashu",
       "createdAt": "2026-10-13T13:15:00.000Z",
-      "updatedAt": "2026-10-13T13:15:00.000Z"
+      "updatedAt": "2026-10-14T17:36:33.662Z"
     },
     {
       "id": "mock-event-4",
       "tripId": "mock-trip-1",
       "dayIndex": 1,
-      "order": 3,
+      "order": 4,
       "title": "Yamanote Line Transit to Shibuya Sky",
       "category": "transport",
       "startTime": "15:30",
@@ -241,13 +241,13 @@
       },
       "notes": "Suica card tapped • Platform 2 inner loop",
       "createdAt": "2026-10-13T15:30:00.000Z",
-      "updatedAt": "2026-10-13T15:30:00.000Z"
+      "updatedAt": "2026-10-14T17:36:33.662Z"
     },
     {
       "id": "mock-event-5",
       "tripId": "mock-trip-1",
       "dayIndex": 1,
-      "order": 4,
+      "order": 3,
       "title": "Shibuya Sky Observatory Sunset",
       "category": "activities",
       "startTime": "17:00",
@@ -263,7 +263,7 @@
       "notes": "Ticket QR ready (Slot 17:00-17:20) • Sunset golden hour",
       "bookingRef": "QR-SKY-771",
       "createdAt": "2026-10-13T17:00:00.000Z",
-      "updatedAt": "2026-10-13T17:00:00.000Z"
+      "updatedAt": "2026-10-14T17:36:33.662Z"
     },
     {
       "id": "mock-event-6",
@@ -285,7 +285,7 @@
       "notes": "Ref #HG-890211 • 8th Fl Terrace Godzilla",
       "bookingRef": "HG-890211",
       "createdAt": "2026-10-13T20:00:00.000Z",
-      "updatedAt": "2026-10-13T20:00:00.000Z"
+      "updatedAt": "2026-10-14T17:36:33.662Z"
     },
     {
       "id": "mock-event-d3-1",
@@ -306,13 +306,13 @@
       },
       "notes": "Historical pagoda and traditional street food",
       "createdAt": "2026-10-14T09:30:00.000Z",
-      "updatedAt": "2026-10-14T09:30:00.000Z"
+      "updatedAt": "2026-10-14T17:38:24.975Z"
     },
     {
       "id": "mock-event-d3-2",
       "tripId": "mock-trip-1",
       "dayIndex": 2,
-      "order": 1,
+      "order": 2,
       "title": "Asakusa Sukiyaki Lunch",
       "category": "dining",
       "startTime": "12:30",
@@ -327,13 +327,13 @@
       },
       "notes": "Wagyu beef sukiyaki set",
       "createdAt": "2026-10-14T12:30:00.000Z",
-      "updatedAt": "2026-10-14T12:30:00.000Z"
+      "updatedAt": "2026-10-14T17:38:24.976Z"
     },
     {
       "id": "mock-event-d3-3",
       "tripId": "mock-trip-1",
       "dayIndex": 2,
-      "order": 2,
+      "order": 3,
       "title": "Akihabara Retro Gaming & Arcades",
       "category": "activities",
       "startTime": "15:00",
@@ -348,7 +348,7 @@
       },
       "notes": "Super Potato & Mandarake Complex",
       "createdAt": "2026-10-14T15:00:00.000Z",
-      "updatedAt": "2026-10-14T15:00:00.000Z"
+      "updatedAt": "2026-10-14T17:38:24.976Z"
     },
     {
       "id": "mock-event-d4-1",
@@ -475,6 +475,24 @@
       "notes": "Tsutaya Books and rooftop garden view",
       "createdAt": "2026-10-16T15:30:00.000Z",
       "updatedAt": "2026-10-16T15:30:00.000Z"
+    },
+    {
+      "tripId": "mock-trip-1",
+      "title": "Test Activity",
+      "category": "activities",
+      "dayIndex": 2,
+      "order": 1,
+      "cost": 10000,
+      "currency": "JPY",
+      "notes": "Drag&Drop testing",
+      "bookingRef": "",
+      "location": {
+        "name": "",
+        "address": ""
+      },
+      "id": "fb2a12fb-3197-49d4-a347-b2e5b9f9757b",
+      "createdAt": "2026-10-14T17:38:07.492Z",
+      "updatedAt": "2026-10-14T17:38:24.975Z"
     }
   ],
   "expenses": [
