@@ -8,12 +8,27 @@ import {
   LazyChecklistsPage,
   LazyBudgetPage,
   LazyNotFoundPage,
-} from './LazyRoute';
+  LazyLoginPage,
+  LazyRegisterPage,
+} from '@app/LazyRoute';
+import { ProtectedRoute } from '@app/ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
+    path: '/login',
+    element: <LazyRoute Component={LazyLoginPage} />,
+  },
+  {
+    path: '/register',
+    element: <LazyRoute Component={LazyRegisterPage} />,
+  },
+  {
     path: '/',
-    element: <App />,
+    element: (
+      <ProtectedRoute>
+        <App />
+      </ProtectedRoute>
+    ),
     errorElement: <RouteErrorBoundary />,
     children: [
       {

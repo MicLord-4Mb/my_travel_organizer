@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Search, Plus, Bell } from 'lucide-react';
 import { Button, useToast } from '@shared/ui';
+import { UserMenu } from '@features/auth';
 import styles from './Header.module.css';
 
 /**
@@ -117,13 +118,7 @@ export const Header: React.FC<HeaderProps> = ({
             <Bell size={20} />
           </button>
 
-          <img
-            src="/user-avatar-planner.png"
-            alt="Planner Avatar"
-            className={styles.avatar}
-            onClick={() => toast({ title: 'Not Implemented', description: 'Profile settings are coming in Stage 2!' })}
-            style={{ cursor: 'pointer' }}
-          />
+          <UserMenu />
         </div>
       </div>
     </header>

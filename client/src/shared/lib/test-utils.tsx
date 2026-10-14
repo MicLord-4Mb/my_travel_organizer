@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { MemoryRouter, type MemoryRouterProps } from 'react-router-dom';
 import { apiSlice } from '@shared/api/apiSlice';
+import { sessionReducer } from '@entities/session';
 import { ToastProvider } from '@shared/ui/Toast';
 
 /**
@@ -13,6 +14,7 @@ export function createTestStore() {
   return configureStore({
     reducer: {
       [apiSlice.reducerPath]: apiSlice.reducer,
+      session: sessionReducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(apiSlice.middleware),

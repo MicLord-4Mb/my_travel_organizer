@@ -5,6 +5,8 @@ export const LazyTripDetailsPage = lazy(() => import('@pages/TripDetailsPage'));
 export const LazyChecklistsPage = lazy(() => import('@pages/ChecklistsPage'));
 export const LazyBudgetPage = lazy(() => import('@pages/BudgetPage'));
 export const LazyNotFoundPage = lazy(() => import('@pages/NotFoundPage'));
+export const LazyLoginPage = lazy(() => import('@pages/AuthPage/LoginPage'));
+export const LazyRegisterPage = lazy(() => import('@pages/AuthPage/RegisterPage'));
 
 export interface LazyRouteProps {
   Component: React.LazyExoticComponent<ComponentType<any>>;

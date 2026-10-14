@@ -16,10 +16,46 @@ export type EntityId = string;
 export interface AuditableEntity {
   /** Unique primary key identifier */
   id: EntityId;
+  /** Optional ID of the user who owns or created this entity */
+  userId?: EntityId;
   /** ISO 8601 UTC timestamp of creation */
   createdAt: string;
   /** ISO 8601 UTC timestamp of last update */
   updatedAt: string;
+}
+
+// ==========================================
+// User and Authentication Models
+// ==========================================
+
+/**
+ * Represents a registered WanderFlow user account.
+ */
+export interface User {
+  /** Unique user identifier */
+  id: EntityId;
+  /** User email address */
+  email: string;
+  /** User full display name */
+  name: string;
+  /** Remote URL for user profile portrait */
+  avatarUrl?: string;
+  /** Access role */
+  role?: 'user' | 'admin';
+  /** Account creation timestamp */
+  createdAt?: string;
+  /** Account last updated timestamp */
+  updatedAt?: string;
+}
+
+/**
+ * Authentication response payload containing JWT token and authenticated user profile.
+ */
+export interface AuthResponse {
+  /** Authenticated user profile */
+  user: User;
+  /** JWT bearer access token string */
+  token: string;
 }
 
 // ==========================================

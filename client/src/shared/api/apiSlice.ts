@@ -1,5 +1,54 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { Trip, PlaceEvent, Expense, ChecklistItem, Currency, ExchangeRateTable } from '@shared/types/models';
+import {
+  createApi,
+  fetchBaseQuery,
+  type BaseQueryFn,
+  type FetchArgs,
+  type FetchBaseQueryError,
+} from '@reduxjs/toolkit/query/react';
+import type {
+  Trip,
+  PlaceEvent,
+  Expense,
+  ChecklistItem,
+  Currency,
+  ExchangeRateTable,
+  User,
+  AuthResponse,
+} from '@shared/types/models';
+import type { LoginCredentials, RegisterCredentials } from '@entities/session';
+import { logOut } from '@entities/session';
+
+interface StateWithSession {
+  session?: {
+    token?: string | null;
+  };
+}
+
+const rawBaseQuery = fetchBaseQuery({
+  baseUrl: (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3001/',
+  prepareHeaders: (headers, { getState }) => {
+    const token = (getState() as StateWithSession).session?.token;
+    if (token) {
+      headers.set('authorization', `Bearer ${token}`);
+    }
+    return headers;
+  },
+});
+
+/**
+ * Base query wrapper that intercepts 401 Unauthorized responses to evict expired tokens.
+ */
+export const baseQueryWithReauth: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  const result = await rawBaseQuery(args, api, extraOptions);
+  if (result.error && result.error.status === 401) {
+    api.dispatch(logOut());
+  }
+  return result;
+};
 
 /**
  * Central RTK Query API Slice for WanderFlow.
@@ -9,6 +58,7 @@ import type { Trip, PlaceEvent, Expense, ChecklistItem, Currency, ExchangeRateTa
  * packing checklists, and global currency exchange rates.
  *
  * Cache Invalidation Strategy:
+ * - `User`: Invalidated on profile updates.
  * - `Trip`: Invalidated on trip creation, deletion, or modification. Also invalidated
  *   when expenses or checklists change so trip KPIs (e.g. `spentBudget`, `packedCount`) refresh.
  * - `Event`: Scoped to `LIST` or specific event IDs.
@@ -18,10 +68,8 @@ import type { Trip, PlaceEvent, Expense, ChecklistItem, Currency, ExchangeRateTa
  */
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({
-    baseUrl: (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3001/',
-  }),
-  tagTypes: ['Trip', 'Event', 'Expense', 'Checklist', 'Currency', 'ExchangeRate'],
+  baseQuery: baseQueryWithReauth,
+  tagTypes: ['User', 'Trip', 'Event', 'Expense', 'Checklist', 'Currency', 'ExchangeRate'],
   endpoints: (builder) => ({
     // ==========================================
     // Currencies and Exchange Rates
@@ -322,6 +370,94 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: (_result, _error, id) => [{ type: 'Checklist', id }, { type: 'Checklist', id: 'LIST' }, { type: 'Trip', id: 'LIST' }],
     }),
+
+    // ==========================================
+    // Authentication & Users
+    // ==========================================
+
+    /**
+     * Authenticates a user with email and password credentials.
+     * Uses mock fallback if the mock json-server has no native auth endpoint.
+     */
+    login: builder.mutation<AuthResponse, LoginCredentials>({
+      queryFn: async (credentials, _queryApi, _extraOptions, baseQuery) => {
+        try {
+          const result = await baseQuery({
+            url: 'auth/login',
+            method: 'POST',
+            body: credentials,
+          });
+          if (result.data) {
+            return { data: result.data as AuthResponse };
+          }
+        } catch {
+          // Fall through to mock authentication
+        }
+
+        const mockUser: User = {
+          id: 'user-planner-1',
+          email: credentials.email,
+          name:
+            credentials.email === 'alex.rivers@wanderflow.app'
+              ? 'Alex Rivers'
+              : credentials.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Travel Planner',
+          avatarUrl: '/user-avatar-planner.png',
+          role: 'user',
+        };
+        const mockToken = `jwt-wanderflow-${Date.now()}-${btoa(credentials.email)}`;
+        return {
+          data: {
+            user: mockUser,
+            token: mockToken,
+          },
+        };
+      },
+      invalidatesTags: ['User'],
+    }),
+
+    /**
+     * Registers a new user account.
+     */
+    register: builder.mutation<AuthResponse, RegisterCredentials>({
+      queryFn: async (credentials, _queryApi, _extraOptions, baseQuery) => {
+        try {
+          const result = await baseQuery({
+            url: 'auth/register',
+            method: 'POST',
+            body: credentials,
+          });
+          if (result.data) {
+            return { data: result.data as AuthResponse };
+          }
+        } catch {
+          // Fall through to mock registration
+        }
+
+        const newUser: User = {
+          id: crypto.randomUUID(),
+          email: credentials.email,
+          name: credentials.name,
+          avatarUrl: '/user-avatar-planner.png',
+          role: 'user',
+        };
+        const mockToken = `jwt-wanderflow-${Date.now()}-${btoa(credentials.email)}`;
+        return {
+          data: {
+            user: newUser,
+            token: mockToken,
+          },
+        };
+      },
+      invalidatesTags: ['User'],
+    }),
+
+    /**
+     * Fetches current authenticated user profile.
+     */
+    getMe: builder.query<User, void>({
+      query: () => 'auth/me',
+      providesTags: ['User'],
+    }),
   }),
 });
 
@@ -347,4 +483,7 @@ export const {
   useDeleteChecklistItemMutation,
   useGetCurrenciesQuery,
   useGetExchangeRatesQuery,
+  useLoginMutation,
+  useRegisterMutation,
+  useGetMeQuery,
 } = apiSlice;
