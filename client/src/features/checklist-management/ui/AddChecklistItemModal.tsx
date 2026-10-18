@@ -87,7 +87,7 @@ export const AddChecklistItemModal: React.FC<AddChecklistItemModalProps> = ({
           <Select
             label="List Section"
             error={errors.type?.message}
-            options={CHECKLIST_TYPE_OPTIONS as any}
+            options={CHECKLIST_TYPE_OPTIONS}
             {...register('type')}
           />
 
@@ -96,8 +96,8 @@ export const AddChecklistItemModal: React.FC<AddChecklistItemModalProps> = ({
             error={errors.category?.message}
             options={
               selectedType === 'pretrip'
-                ? (CHECKLIST_CATEGORIES_BY_TYPE.pretrip as any)
-                : (CHECKLIST_CATEGORIES_BY_TYPE.luggage as any)
+                ? CHECKLIST_CATEGORIES_BY_TYPE.pretrip
+                : CHECKLIST_CATEGORIES_BY_TYPE.luggage
             }
             {...register('category')}
           />
@@ -107,7 +107,7 @@ export const AddChecklistItemModal: React.FC<AddChecklistItemModalProps> = ({
           <Select
             label="Priority Level"
             error={errors.priority?.message}
-            options={CHECKLIST_PRIORITY_OPTIONS as any}
+            options={CHECKLIST_PRIORITY_OPTIONS}
             {...register('priority')}
           />
 

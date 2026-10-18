@@ -191,8 +191,15 @@
 }
 
 .cardContainer:hover .cardActions,
+.cardContainer:focus-within .cardActions,
 .cardSelected .cardActions {
   opacity: 1;
+}
+
+@media (hover: none) {
+  .cardActions {
+    opacity: 1;
+  }
 }
 
 .actionIconBtn {

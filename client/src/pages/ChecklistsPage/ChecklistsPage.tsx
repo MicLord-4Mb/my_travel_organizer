@@ -10,6 +10,7 @@ import { useActiveTrip } from '@entities/trip';
 import {
   AddChecklistItemModal,
   ApplyTemplateModal,
+  CHECKLIST_TEMPLATES,
   type ChecklistItemFormData,
 } from '@features/checklist-management';
 import { ChecklistHeader } from './components/ChecklistHeader/ChecklistHeader';
@@ -158,12 +159,49 @@ export const ChecklistsPage: React.FC = () => {
     }
   };
 
-  const handleApplyTemplate = async (_templateId: string) => {
-    toast({
-      title: 'Not Implemented',
-      description: 'Templates require backend support in Stage 2 REST API. Skipped for local json-server.',
-      variant: 'default'
-    });
+  const handleApplyTemplate = async (templateId: string) => {
+    const template = CHECKLIST_TEMPLATES[templateId];
+    if (!effectiveTripId || !template) return;
+
+    const existingTitles = new Set(tripItems.map((i) => i.title.toLowerCase()));
+    const newItems = template.items.filter(
+      (item) => !existingTitles.has(item.title.toLowerCase())
+    );
+
+    if (newItems.length === 0) {
+      toast({
+        title: 'Already Applied',
+        description: `All items from "${template.name}" are already in your checklist.`,
+      });
+      return;
+    }
+
+    try {
+      await Promise.all(
+        newItems.map((item) =>
+          createChecklistItem({
+            tripId: effectiveTripId,
+            title: item.title,
+            type: item.type,
+            category: item.category,
+            priority: item.priority,
+            quantity: item.quantity ?? 1,
+            isCompleted: false,
+          }).unwrap()
+        )
+      );
+      toast({
+        title: 'Template Applied',
+        description: `Added ${newItems.length} items from "${template.name}".`,
+        variant: 'success',
+      });
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to apply template items',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleAddItemModalSubmit = async (data: ChecklistItemFormData) => {
@@ -330,7 +368,7 @@ export const ChecklistsPage: React.FC = () => {
               {/* Subgroup 1: Travel Documents & Insurance */}
               <ChecklistSection
                 title="Travel Documents & Insurance"
-                subtitle="Sub-group A"
+                subtitle="Passports, visas, permits & health coverage"
                 icon={<FileText size={18} />}
                 iconVariant="lodging"
                 items={docsAndInsuranceItems}
@@ -341,7 +379,7 @@ export const ChecklistsPage: React.FC = () => {
               {/* Subgroup 2: Bookings & Confirmations */}
               <ChecklistSection
                 title="Bookings & Confirmations"
-                subtitle="Sub-group B"
+                subtitle="Flights, hotels, transit passes & reservations"
                 icon={<BookmarkCheck size={18} />}
                 iconVariant="primary"
                 items={bookingsAndTasksItems}
@@ -375,9 +413,9 @@ export const ChecklistsPage: React.FC = () => {
               {/* Subgroup 1: Electronics & Gear */}
               <ChecklistSection
                 title="Electronics & Gear"
-                subtitle="Sub-group A"
+                subtitle="Chargers, adapters, cameras & power banks"
                 icon={<Cpu size={18} />}
-                iconVariant="dining"
+                iconVariant="luggage"
                 items={gearItems}
                 onToggle={handleToggleItem}
                 onDelete={handleDeleteItem}
@@ -386,7 +424,7 @@ export const ChecklistsPage: React.FC = () => {
               {/* Subgroup 2: Clothing & Footwear */}
               <ChecklistSection
                 title="Clothing & Footwear"
-                subtitle="Sub-group B"
+                subtitle="Weather-appropriate layers & walking shoes"
                 icon={<Shirt size={18} />}
                 iconVariant="activities"
                 items={clothesItems}
@@ -397,9 +435,9 @@ export const ChecklistsPage: React.FC = () => {
               {/* Subgroup 3: Toiletries & Medicine */}
               <ChecklistSection
                 title="Toiletries & Medicine"
-                subtitle="Sub-group C"
+                subtitle="First-aid kit, prescriptions & travel-size essentials"
                 icon={<HeartPulse size={18} />}
-                iconVariant="primary"
+                iconVariant="dining"
                 items={medsItems}
                 onToggle={handleToggleItem}
                 onDelete={handleDeleteItem}

@@ -5,16 +5,20 @@
  * flight carry-on bags, international journeys, or weekend trips.
  */
 
+import type {ChecklistCategory, ChecklistPriority, ChecklistType} from "@shared/types/models";
+
 /**
  * Single item blueprint within a packing template.
  */
 export interface ChecklistTemplateItem {
   /** Item title or description */
   title: string;
+  type: ChecklistType;
   /** Suggested category */
-  category?: string;
+  category: ChecklistCategory;
   /** Priority level */
-  priority?: 'high' | 'medium' | 'low';
+  priority: ChecklistPriority;
+  quantity?: number;
 }
 
 /**
@@ -37,33 +41,33 @@ export const CHECKLIST_TEMPLATES: Record<string, ChecklistTemplate> = {
     name: 'Flight Essentials',
     description: 'Must-haves in your carry-on luggage before boarding.',
     items: [
-      { title: 'Passport & Visas', category: 'documents', priority: 'high' },
-      { title: 'Boarding Passes & Booking Conf.', category: 'documents', priority: 'high' },
-      { title: 'Noise-Canceling Headphones', category: 'gear', priority: 'medium' },
-      { title: 'Power Bank & Charging Cables', category: 'gear', priority: 'high' },
-      { title: 'Eye Mask & Earplugs', category: 'gear', priority: 'low' },
-      { title: 'Hand Sanitizer & Disinfectant Wipes', category: 'meds', priority: 'medium' },
+      { title: 'Passport & Visas', type: 'pretrip', category: 'documents', priority: 'high' },
+      { title: 'Boarding Passes & Booking Conf.', type: 'pretrip', category: 'bookings', priority: 'high' },
+      { title: 'Noise-Canceling Headphones', type: 'luggage', category: 'gear', priority: 'normal' },
+      { title: 'Power Bank & Charging Cables', type: 'luggage', category: 'gear', priority: 'high' },
+      { title: 'Eye Mask & Earplugs', type: 'luggage', category: 'gear', priority: 'optional' },
+      { title: 'Hand Sanitizer & Disinfectant Wipes', type: 'luggage', category: 'meds', priority: 'normal' },
     ],
   },
   international: {
     name: 'International Travel',
     description: 'Crucial documents, adapters, and travel health prep.',
     items: [
-      { title: 'International Driving Permit', category: 'documents', priority: 'medium' },
-      { title: 'Universal Power Adapter', category: 'gear', priority: 'high' },
-      { title: 'Credit Cards (No Foreign Transaction Fee)', category: 'documents', priority: 'high' },
-      { title: 'Travel Health Insurance Copy', category: 'insurance', priority: 'high' },
-      { title: 'First-Aid & Prescription Medicines', category: 'meds', priority: 'high' },
+      { title: 'International Driving Permit', type: 'pretrip', category: 'documents', priority: 'normal' },
+      { title: 'Universal Power Adapter', type: 'luggage', category: 'gear', priority: 'high' },
+      { title: 'Credit Cards (No Foreign Transaction Fee)', type: 'pretrip', category: 'documents', priority: 'high' },
+      { title: 'Travel Health Insurance Copy', type: 'pretrip', category: 'insurance', priority: 'high' },
+      { title: 'First-Aid & Prescription Medicines', type: 'luggage', category: 'meds', priority: 'high' },
     ],
   },
   weekend: {
     name: 'Weekend Getaway',
     description: 'Lightweight setup for 2-3 days of stress-free travel.',
     items: [
-      { title: 'Comfortable Walking Shoes', category: 'clothes', priority: 'high' },
-      { title: 'Casual Outfits (x3)', category: 'clothes', priority: 'medium' },
-      { title: 'Toiletry Bag (Travel Size)', category: 'meds', priority: 'medium' },
-      { title: 'Phone Charger', category: 'gear', priority: 'high' },
+      { title: 'Comfortable Walking Shoes', type: 'luggage', category: 'clothes', priority: 'high' },
+      { title: 'Casual Outfits', type: 'luggage', category: 'clothes', priority: 'normal', quantity: 3 },
+      { title: 'Toiletry Bag (Travel Size)', type: 'luggage', category: 'meds', priority: 'normal' },
+      { title: 'Phone Charger', type: 'luggage', category: 'gear', priority: 'high' },
     ],
   },
 };

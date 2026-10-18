@@ -58,6 +58,24 @@ export interface AuthResponse {
   token: string;
 }
 
+/**
+ * Credentials payload for user sign-in.
+ */
+export interface LoginCredentials {
+  email: string;
+  password?: string;
+  rememberMe?: boolean;
+}
+
+/**
+ * Registration payload for creating a new user account.
+ */
+export interface RegisterCredentials {
+  name: string;
+  email: string;
+  password?: string;
+}
+
 // ==========================================
 // Trip Models
 // ==========================================

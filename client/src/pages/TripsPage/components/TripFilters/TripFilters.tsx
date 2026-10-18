@@ -85,7 +85,7 @@ export const TripFilters: React.FC<TripFiltersProps> = ({
             <Select
               value={sortBy}
               onChange={(e) => onSortChange(e.target.value as SortOption)}
-              options={TRIP_SORT_OPTIONS as any}
+              options={TRIP_SORT_OPTIONS}
             />
           </div>
 

@@ -109,8 +109,16 @@
   flex-shrink: 0;
 }
 
-.row:hover .deleteBtn {
+.row:hover .deleteBtn,
+.row:focus-within .deleteBtn,
+.deleteBtn:focus-visible {
   opacity: 1;
+}
+
+@media (hover: none) {
+  .deleteBtn {
+    opacity: 1;
+  }
 }
 
 .deleteBtn:hover {

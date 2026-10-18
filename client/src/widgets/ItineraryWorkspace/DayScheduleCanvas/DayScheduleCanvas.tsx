@@ -154,6 +154,7 @@ export const DayScheduleCanvas: React.FC<DayScheduleCanvasProps> = ({
                   <TimelineItem
                     event={event}
                     isSelected={isSelected}
+                    isDragDisabled={currentFilter !== 'all'}
                     onSelect={() => onSelectEvent(event.id)}
                     onEdit={() => onEditEvent(event)}
                     onDelete={() => onDeleteEvent(event)}

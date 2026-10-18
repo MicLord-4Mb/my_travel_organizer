@@ -1,3 +1,4 @@
+import {parseLocalDate} from "@shared/lib/date";
 import { z } from 'zod';
 import { TRIP_STATUS_OPTIONS } from '@entities/trip';
 
@@ -53,8 +54,10 @@ export const tripSchema = z
   })
   .refine(
     (data) => {
-      if (data.startDate && data.endDate) {
-        return new Date(data.endDate) >= new Date(data.startDate);
+      const start = parseLocalDate(data.startDate);
+      const end = parseLocalDate(data.endDate);
+      if (start && end) {
+        return end.getTime() >= start.getTime();
       }
       return true;
     },

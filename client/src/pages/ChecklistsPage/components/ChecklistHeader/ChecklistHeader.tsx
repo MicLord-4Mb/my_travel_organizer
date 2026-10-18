@@ -1,4 +1,5 @@
-import React from 'react';
+import {diffInDays, parseLocalDate} from "@shared/lib/date";
+import React, {useState} from 'react';
 import {
   PlaneTakeoff,
   Filter,
@@ -41,21 +42,38 @@ export const ChecklistHeader: React.FC<ChecklistHeaderProps> = ({
   onOpenTemplates,
   onOpenAddItem,
 }) => {
+
+  const [today] = useState(() => new Date());
+  const startDate = parseLocalDate(currentTrip?.startDate);
+  const daysUntilStart = startDate ? diffInDays( today, startDate) : null;
+
+  const statusCountdownLabel =
+    currentTrip?.status === 'in_progress'
+      ? 'Active Now'
+      : currentTrip?.status === 'completed'
+        ? 'Completed'
+        : currentTrip?.status === 'cancelled'
+          ? 'Cancelled'
+          : daysUntilStart !== null && daysUntilStart > 0
+            ? `T-Minus ${daysUntilStart} ${daysUntilStart === 1 ? 'Day' : 'Days'}`
+            : daysUntilStart === 0
+              ? 'Departing Today'
+              : 'Planned';
+
   return (
     <section className={styles.headerContainer} aria-label="Checklist summary and controls">
       <div className={styles.topRow}>
         <div className={styles.infoArea}>
           <div className={styles.badgesRow}>
             <span className={styles.seasonBadge}>
-              {currentTrip?.startDate
-                ? `Trip ${new Date(currentTrip.startDate).getFullYear()}`
-                : 'Current Expedition'}
+              {startDate
+                ? `Trip ${startDate.getFullYear()}`
+                : 'Current Expedition'
+              }
             </span>
             <span className={styles.countdownBadge}>
               <PlaneTakeoff size={14} />
-              {currentTrip?.status === 'in_progress'
-                ? 'Active Now'
-                : 'T-Minus 9 Days'}
+              {statusCountdownLabel}
             </span>
           </div>
 
@@ -93,7 +111,10 @@ export const ChecklistHeader: React.FC<ChecklistHeaderProps> = ({
             aria-pressed={filterUnchecked}
           >
             <Filter size={16} />
-            <span>{filterUnchecked ? 'Showing: Unchecked' : 'Filter: Unchecked only'}</span>
+            <span>{filterUnchecked
+              ? 'Showing: Unchecked'
+              : 'Filter: Unchecked only'
+            }</span>
           </button>
 
           <button

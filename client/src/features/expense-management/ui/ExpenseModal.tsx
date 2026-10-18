@@ -126,7 +126,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       currency: trip.currency || 'USD',
       category: 'dining',
       date: initialDate,
-      dayIndex: 1,
+      dayIndex: 0,
       paymentMethod: 'Credit Card',
       notes: '',
       placeEventId: '',
@@ -183,7 +183,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           currency: trip.currency || 'USD',
           category: 'dining',
           date: toDateInputValue(new Date()),
-          dayIndex: 1,
+          dayIndex: 0,
           paymentMethod: 'Credit Card',
           notes: '',
           placeEventId: '',
@@ -337,7 +337,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             role="radiogroup"
             aria-labelledby={categoryGroupId}
           >
-            {CATEGORIES.map((cat) => {
+            {CATEGORIES.map((cat, idx) => {
               const isSelected = selectedCategory === cat.key;
               return (
                 <div
@@ -352,6 +352,14 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       setValue('category', cat.key, { shouldValidate: true });
+                    } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      const next = CATEGORIES[(idx + 1) % CATEGORIES.length];
+                      setValue('category', next.key, { shouldValidate: true });
+                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      const prev = CATEGORIES[(idx - 1 + CATEGORIES.length) % CATEGORIES.length];
+                      setValue('category', prev.key, { shouldValidate: true });
                     }
                   }}
                 >

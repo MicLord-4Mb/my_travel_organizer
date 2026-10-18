@@ -1,3 +1,4 @@
+import {inclusiveDayCount, parseLocalDate} from "@shared/lib/date";
 import React, { useState } from 'react';
 import {
   Search,
@@ -91,18 +92,9 @@ export const TransactionsLedger: React.FC<TransactionsLedgerProps> = ({
   ];
 
   if (trip.startDate) {
-    const startDate = new Date(trip.startDate);
-    const endDate = trip.endDate ? new Date(trip.endDate) : startDate;
-    const diffDays = Math.max(
-      1,
-      Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
-    );
-
+    const diffDays = Math.max(1, inclusiveDayCount(trip.startDate, trip.endDate || trip.startDate));
     for (let i = 0; i < diffDays; i++) {
-      dayOptions.push({
-        label: `Day ${i + 1}`,
-        value: String(i),
-      });
+      dayOptions.push({ label: `Day ${i + 1}`, value: String(i) });
     }
   }
 
@@ -332,11 +324,14 @@ export const TransactionsLedger: React.FC<TransactionsLedgerProps> = ({
                   ? Number(expense.amount) || 0
                   : convert(Number(expense.amount) || 0, originalCurrency, secondaryCurrency);
 
-                const dateFormatted = new Date(expense.date).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                });
+                const parsedExpenseDate = parseLocalDate(expense.date);
+                const dateFormatted = parsedExpenseDate
+                  ? parsedExpenseDate.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })
+                  : expense.date;
 
                 return (
                   <tr key={expense.id} className={styles.tr}>

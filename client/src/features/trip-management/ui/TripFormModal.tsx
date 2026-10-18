@@ -177,7 +177,7 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
           <Select
             label="Status"
             error={errors.status?.message}
-            options={TRIP_STATUS_OPTIONS as any}
+            options={TRIP_STATUS_OPTIONS}
             {...register('status')}
           />
         </div>

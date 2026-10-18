@@ -24,7 +24,7 @@ import {
 import { TripFormModal } from '@features/trip-management';
 import { useCurrency } from '@shared/lib/useCurrency';
 import { parseLocalDate, addDaysLocalDate, toDateInputValue } from '@shared/lib/date';
-import { useToast, ConfirmDialog } from '@shared/ui';
+import {useToast, ConfirmDialog, Button} from '@shared/ui';
 import styles from './TripDetailsPage.module.css';
 
 /**
@@ -258,9 +258,9 @@ export default function TripDetailsPage() {
       <div className={styles.emptyContainer}>
         <h2>404 - Trip Not Found</h2>
         <p>The trip you are looking for does not exist.</p>
-        <button onClick={() => navigate('/')} className={styles.emptyButton}>
+        <Button variant="primary" onClick={() => navigate('/')}>
           Back to Trips
-        </button>
+        </Button>
       </div>
     );
   }
@@ -270,9 +270,9 @@ export default function TripDetailsPage() {
       <div className={styles.emptyContainer}>
         <h2>No Trips Available</h2>
         <p>Please return to the overview and create a trip.</p>
-        <button onClick={() => navigate('/')} className={styles.emptyButton}>
+        <Button variant="primary" onClick={() => navigate('/')}>
           Go to Overview
-        </button>
+        </Button>
       </div>
     );
   }

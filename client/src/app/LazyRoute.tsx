@@ -9,7 +9,7 @@ export const LazyLoginPage = lazy(() => import('@pages/AuthPage/LoginPage'));
 export const LazyRegisterPage = lazy(() => import('@pages/AuthPage/RegisterPage'));
 
 export interface LazyRouteProps {
-  Component: React.LazyExoticComponent<ComponentType<any>>;
+  Component: React.LazyExoticComponent<ComponentType>;
 }
 
 export const LazyRoute: React.FC<LazyRouteProps> = ({ Component }) => (

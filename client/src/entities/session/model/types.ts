@@ -18,21 +18,3 @@ export interface SessionState {
   /** Optional error message from last auth attempt */
   error: string | null;
 }
-
-/**
- * Credentials payload for user sign-in.
- */
-export interface LoginCredentials {
-  email: string;
-  password?: string;
-  rememberMe?: boolean;
-}
-
-/**
- * Registration payload for creating a new user account.
- */
-export interface RegisterCredentials {
-  name: string;
-  email: string;
-  password?: string;
-}

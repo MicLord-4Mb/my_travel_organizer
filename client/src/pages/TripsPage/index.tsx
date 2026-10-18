@@ -129,6 +129,10 @@ export const TripsPage: React.FC = () => {
 
   // Compute KPI Ticker Metrics (real data only, no placeholder numbers)
   const kpiMetrics = useMemo(() => {
+    const validTripIds = new Set(trips.map((t) => t.id));
+    const validExpenses = allExpenses.filter((e) => validTripIds.has(e.tripId));
+    const validChecklists = allChecklists.filter((c) => validTripIds.has(c.tripId));
+
     // Unique destinations or total active/upcoming trips
     const activeOrUpcoming = trips.filter(
       (t) => t.status === 'in_progress' || t.status === 'planned'
@@ -137,14 +141,16 @@ export const TripsPage: React.FC = () => {
       activeOrUpcoming.map((t) => t.location?.split(',')[0].trim() || t.title)
     );
 
-    const spentBudget = sum(allExpenses, reportingCurrency);
+    const spentBudget = sum(validExpenses, reportingCurrency);
     const totalBudget = sum(
-      trips.map((t) => ({ amount: t.budgetLimit, currency: t.currency })),
+      trips.map((t) => (
+        { amount: t.budgetLimit, currency: t.currency }
+      )),
       reportingCurrency
     );
 
-    const totalPacked = allChecklists.filter((c) => c.isCompleted).length;
-    const totalItems = allChecklists.length;
+    const totalPacked = validChecklists.filter((c) => c.isCompleted).length;
+    const totalItems = validChecklists.length;
     // `null` = there is no checklist item yet, so readiness is undefined rather than 0%.
     const readinessPercentage =
       totalItems > 0 ? Math.round((totalPacked / totalItems) * 100) : null;

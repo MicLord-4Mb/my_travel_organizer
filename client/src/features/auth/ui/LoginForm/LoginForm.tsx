@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Sparkles, LogIn } from 'lucide-react';
 import { Input, Button, Checkbox, useToast } from '@shared/ui';
-import { loginSchema, type LoginFormData } from '@features/auth';
+import {type LoginFormData, loginSchema} from '@features/auth/model/authSchema';
 import { useLoginMutation } from '@shared/api/apiSlice';
 import { useAppDispatch } from '@app/hooks';
 import { setCredentials } from '@entities/session';
@@ -31,6 +31,7 @@ export const LoginForm: React.FC = () => {
     register,
     handleSubmit,
     setValue,
+    control,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -40,6 +41,8 @@ export const LoginForm: React.FC = () => {
       rememberMe: true,
     },
   });
+
+  const rememberMe = useWatch({ control, name: 'rememberMe' });
 
   const onSubmit = async (data: LoginFormData) => {
     setServerError(null);
@@ -123,7 +126,10 @@ export const LoginForm: React.FC = () => {
 
       <div className={styles.rowBetween}>
         <label className={styles.rememberGroup}>
-          <Checkbox checked={true} />
+          <Checkbox
+            checked={Boolean(rememberMe)}
+            onCheckedChange={(checked) => setValue('rememberMe', checked)}
+          />
           <span>Keep me signed in</span>
         </label>
         <Link to="/login" className={styles.forgotLink} onClick={() => toast({ title: 'Password Reset', description: 'Demo password reset link simulated.' })}>

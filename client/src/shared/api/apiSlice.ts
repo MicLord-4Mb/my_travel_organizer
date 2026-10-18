@@ -14,9 +14,10 @@ import type {
   ExchangeRateTable,
   User,
   AuthResponse,
+  LoginCredentials,
+  RegisterCredentials
 } from '@shared/types/models';
-import type { LoginCredentials, RegisterCredentials } from '@entities/session';
-import { logOut } from '@entities/session';
+
 
 interface StateWithSession {
   session?: {
@@ -45,7 +46,7 @@ export const baseQueryWithReauth: BaseQueryFn<
 > = async (args, api, extraOptions) => {
   const result = await rawBaseQuery(args, api, extraOptions);
   if (result.error && result.error.status === 401) {
-    api.dispatch(logOut());
+    api.dispatch({type: 'session/logOut'});
   }
   return result;
 };
@@ -157,7 +158,13 @@ export const apiSlice = createApi({
         url: `trips/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (_result, _error, id) => [{ type: 'Trip', id }, { type: 'Trip', id: 'LIST' }],
+      invalidatesTags: (_result, _error, id) => [
+        { type: 'Trip', id },
+        { type: 'Trip', id: 'LIST' },
+        { type: 'Event', id: `TRIP_${id}` },
+        { type: 'Expense', id: 'LIST' },
+        { type: 'Checklist', id: 'LIST' },
+      ],
     }),
 
     // ==========================================
@@ -207,7 +214,12 @@ export const apiSlice = createApi({
           updatedAt: new Date().toISOString(),
         },
       }),
-      invalidatesTags: (_result, _error, { id }) => [{ type: 'Event', id }],
+      invalidatesTags: (result, _error, { id, payload }) => [
+        { type: 'Event', id },
+        ...(result?.tripId || payload.tripId
+        ? [{ type: 'Event' as const, id: `TRIP_${result?.tripId ?? payload.tripId}`}]
+        : []),
+      ],
     }),
 
     /**
@@ -282,7 +294,11 @@ export const apiSlice = createApi({
           updatedAt: new Date().toISOString(),
         },
       }),
-      invalidatesTags: (_result, _error, { id }) => [{ type: 'Expense', id }, { type: 'Trip', id: 'LIST' }],
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Expense', id },
+        { type: 'Expense', id: 'LIST' },
+        { type: 'Trip', id: 'LIST' }
+      ],
     }),
 
     /**
@@ -357,7 +373,11 @@ export const apiSlice = createApi({
           updatedAt: new Date().toISOString(),
         },
       }),
-      invalidatesTags: (_result, _error, { id }) => [{ type: 'Checklist', id }, { type: 'Trip', id: 'LIST' }],
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Checklist', id },
+        { type: 'Checklist', id: 'LIST' },
+        { type: 'Trip', id: 'LIST' }
+      ],
     }),
 
     /**
@@ -381,7 +401,6 @@ export const apiSlice = createApi({
      */
     login: builder.mutation<AuthResponse, LoginCredentials>({
       queryFn: async (credentials, _queryApi, _extraOptions, baseQuery) => {
-        try {
           const result = await baseQuery({
             url: 'auth/login',
             method: 'POST',
@@ -390,8 +409,10 @@ export const apiSlice = createApi({
           if (result.data) {
             return { data: result.data as AuthResponse };
           }
-        } catch {
-          // Fall through to mock authentication
+
+        const status = result.error?.status;
+        if (!import.meta.env.DEV || (status !== 404 && status !== 'FETCH_ERROR')){
+          return { error: result.error! };
         }
 
         const mockUser: User = {
@@ -404,7 +425,7 @@ export const apiSlice = createApi({
           avatarUrl: '/user-avatar-planner.png',
           role: 'user',
         };
-        const mockToken = `jwt-wanderflow-${Date.now()}-${btoa(credentials.email)}`;
+        const mockToken = `jwt-wanderflow-${Date.now()}-${encodeURIComponent(credentials.email)}`;
         return {
           data: {
             user: mockUser,
@@ -420,7 +441,7 @@ export const apiSlice = createApi({
      */
     register: builder.mutation<AuthResponse, RegisterCredentials>({
       queryFn: async (credentials, _queryApi, _extraOptions, baseQuery) => {
-        try {
+
           const result = await baseQuery({
             url: 'auth/register',
             method: 'POST',
@@ -429,8 +450,10 @@ export const apiSlice = createApi({
           if (result.data) {
             return { data: result.data as AuthResponse };
           }
-        } catch {
-          // Fall through to mock registration
+
+        const status = result.error?.status;
+        if (!import.meta.env.DEV || (status !== 404 && status !== 'FETCH_ERROR')) {
+          return { error: result.error! };
         }
 
         const newUser: User = {
@@ -440,7 +463,7 @@ export const apiSlice = createApi({
           avatarUrl: '/user-avatar-planner.png',
           role: 'user',
         };
-        const mockToken = `jwt-wanderflow-${Date.now()}-${btoa(credentials.email)}`;
+        const mockToken = `jwt-wanderflow-${Date.now()}-${encodeURIComponent(credentials.email)}`;
         return {
           data: {
             user: newUser,

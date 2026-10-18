@@ -31,7 +31,7 @@ export const BudgetPage: React.FC = () => {
   const { id: routeTripId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { currencies, rates, baseCurrency } = useCurrency();
+  const { currencies, rates, baseCurrency, convert } = useCurrency();
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const { activeTrip, status: tripStatus, allTrips: trips } = useActiveTrip(selectedTripId);
 
@@ -91,13 +91,15 @@ export const BudgetPage: React.FC = () => {
     });
 
     return [...filtered].sort((a, b) => {
-      if (sortBy === 'date-desc') return new Date(b.date).getTime() - new Date(a.date).getTime();
-      if (sortBy === 'date-asc') return new Date(a.date).getTime() - new Date(b.date).getTime();
-      if (sortBy === 'amount-desc') return b.amount - a.amount;
-      if (sortBy === 'amount-asc') return a.amount - b.amount;
+      if (sortBy === 'date-desc') return b.date.localeCompare(a.date);
+      if (sortBy === 'date-asc') return a.date.localeCompare(b.date);
+      const aNorm = convert(Number(a.amount) || 0, a.currency || displayCurrency, displayCurrency);
+      const bNorm = convert(Number(b.amount) || 0, b.currency || displayCurrency, displayCurrency);
+      if (sortBy === 'amount-desc') return bNorm - aNorm;
+      if (sortBy === 'amount-asc') return aNorm - bNorm;
       return 0;
     });
-  }, [expenses, searchQuery, categoryFilter, dayFilter, sortBy]);
+  }, [expenses, searchQuery, categoryFilter, dayFilter, sortBy, convert, displayCurrency]);
 
   const budgetAnalytics = useMemo(() => {
     if (!activeTrip) return null;

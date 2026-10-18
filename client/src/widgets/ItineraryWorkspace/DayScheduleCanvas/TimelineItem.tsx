@@ -17,6 +17,7 @@ import styles from './TimelineItem.module.css';
 export interface TimelineItemProps {
   event: PlaceEvent;
   isSelected?: boolean;
+  isDragDisabled?: boolean;
   onSelect?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -51,6 +52,7 @@ const CATEGORY_CONFIG: Record<
 export const TimelineItem: React.FC<TimelineItemProps> = ({
   event,
   isSelected,
+  isDragDisabled,
   onSelect,
   onEdit,
   onDelete,
@@ -63,7 +65,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: event.id });
+  } = useSortable({ id: event.id, disabled: isDragDisabled });
 
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
@@ -106,18 +108,19 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
         <div className={styles.cardContent}>
           <div className={styles.cardHeader}>
             <div className={styles.titleArea}>
-              <button
-                type="button"
-                className={styles.dragHandle}
-                {...attributes}
-                {...listeners}
-                title="Drag to reorder event"
-                aria-label={`Reorder ${event.title}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <GripVertical size={16} />
-              </button>
-
+              {!isDragDisabled && (
+                <button
+                  type="button"
+                  className={styles.dragHandle}
+                  {...attributes}
+                  {...listeners}
+                  title="Drag to reorder event"
+                  aria-label={`Reorder ${event.title}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <GripVertical size={16} />
+                </button>
+              )}
               <span
                 className={styles.categoryBadge}
                 style={{ color: cat.color, background: cat.bg }}

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, UserPlus } from 'lucide-react';
 import { Input, Button, useToast } from '@shared/ui';
-import { registerSchema, type RegisterFormData } from '@features/auth';
+import { registerSchema, type RegisterFormData } from '@features/auth/model/authSchema';
 import { useRegisterMutation } from '@shared/api/apiSlice';
 import { useAppDispatch } from '@app/hooks';
 import { setCredentials } from '@entities/session';

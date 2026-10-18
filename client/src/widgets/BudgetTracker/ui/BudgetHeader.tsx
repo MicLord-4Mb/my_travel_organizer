@@ -1,3 +1,4 @@
+import {inclusiveDayCount, parseLocalDate} from "@shared/lib/date";
 import React from 'react';
 import { Calendar, ArrowLeftRight, PlusCircle } from 'lucide-react';
 import type { Trip, EntityId } from '@shared/types/models';
@@ -51,13 +52,10 @@ export const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   const nextCurrency = currencies[(currentIndex + 1) % (currencies.length || 1)]?.code || 'USD';
   // Format date range
   const formattedDates = React.useMemo(() => {
-    if (!trip.startDate) return '';
-    const start = new Date(trip.startDate);
-    const end = trip.endDate ? new Date(trip.endDate) : start;
-    const diffDays = Math.max(
-      1,
-      Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
-    );
+    const start = parseLocalDate(trip.startDate);
+    if (!start) return '';
+    const end = parseLocalDate(trip.endDate) ?? start;
+    const diffDays = Math.max(1, inclusiveDayCount(trip.startDate, trip.endDate || trip.startDate));
 
     const startStr = start.toLocaleDateString('en-US', {
       month: 'short',
