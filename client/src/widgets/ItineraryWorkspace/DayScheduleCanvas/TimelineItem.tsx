@@ -18,6 +18,7 @@ export interface TimelineItemProps {
   event: PlaceEvent;
   isSelected?: boolean;
   isDragDisabled?: boolean;
+  isOverlay?: boolean;
   onSelect?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -52,7 +53,8 @@ const CATEGORY_CONFIG: Record<
 export const TimelineItem: React.FC<TimelineItemProps> = ({
   event,
   isSelected,
-  isDragDisabled,
+  isDragDisabled = false,
+  isOverlay = false,
   onSelect,
   onEdit,
   onDelete,
@@ -65,12 +67,17 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: event.id, disabled: isDragDisabled });
+  } = useSortable({
+    id: isOverlay ? `overlay-${event.id}` : event.id,
+    disabled: isDragDisabled || isOverlay
+  });
 
-  const style: React.CSSProperties = {
+  const style: React.CSSProperties | undefined = isOverlay
+    ? undefined
+    : {
     transform: CSS.Translate.toString(transform),
     transition,
-  };
+    };
 
   const catKey = (event.category || 'activities') as EventCategory;
   const cat = CATEGORY_CONFIG[catKey] || CATEGORY_CONFIG.activities;
@@ -78,10 +85,10 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
 
   return (
     <div
-      ref={setNodeRef}
+      ref={isOverlay ? undefined : setNodeRef}
       style={style}
       className={`${styles.timelineRow} ${
-        isDragging ? styles.timelineRowDragging : ''
+        isDragging ?? !isOverlay ? styles.timelineRowDragging : ''
       }`}
     >
       {/* Node Timestamp */}

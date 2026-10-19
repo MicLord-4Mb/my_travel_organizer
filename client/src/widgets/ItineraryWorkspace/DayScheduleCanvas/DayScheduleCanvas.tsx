@@ -179,6 +179,7 @@ export const DayScheduleCanvas: React.FC<DayScheduleCanvasProps> = ({
               <TimelineItem
                 event={activeDraggingEvent}
                 isSelected={selectedEventId === activeDraggingEvent.id}
+                isOverlay
               />
             ) : null}
           </DragOverlay>

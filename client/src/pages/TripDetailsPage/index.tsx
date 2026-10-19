@@ -5,7 +5,7 @@ import {
   useGetEventsByTripIdQuery,
   useCreateEventMutation,
   useUpdateEventMutation,
-  useDeleteEventMutation,
+  useDeleteEventMutation, useReorderEventsMutation,
 } from '@shared/api/apiSlice';
 import { useActiveTrip } from '@entities/trip';
 import type { PlaceEvent, EventCategory } from '@shared/types/models';
@@ -57,6 +57,7 @@ export default function TripDetailsPage() {
 
   const [createEvent] = useCreateEventMutation();
   const [updateEvent] = useUpdateEventMutation();
+  const [reorderEvents] = useReorderEventsMutation();
   const [deleteEvent] = useDeleteEventMutation();
   const [updateTripMutation] = useUpdateTripMutation();
 
@@ -183,14 +184,16 @@ export default function TripDetailsPage() {
   const handleReorderEvents = async (reordered: PlaceEvent[]) => {
     if (!activeTrip) return;
     try {
-      // Send multiple patch requests to update order
-      await Promise.all(
-        reordered.map((event, index) =>
-          updateEvent({ id: event.id, payload: { order: index } }).unwrap()
-        )
-      );
-    } catch (error) {
-      console.error('Failed to persist the new event order', error);
+      await reorderEvents({
+        tripId: activeTrip.id,
+        events: reordered,
+      }).unwrap();
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to save new event order',
+        variant: 'destructive',
+      });
     }
   };
 

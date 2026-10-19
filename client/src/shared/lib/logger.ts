@@ -35,7 +35,7 @@ class Logger {
   private readonly maxBufferSize = 50;
   private readonly buffer: LogEntry[] = [];
   private readonly isProd = import.meta.env.PROD;
-  private readonly logEndpoint = (import.meta.env.VITE_LOG_ENDPOINT as string | undefined) ?? '/api/logs';
+  private readonly logEndpoint = (import.meta.env.VITE_LOG_ENDPOINT as string | undefined) ?? 'http://localhost:3002/logs';
 
   private formatTimestamp(): string {
     return new Date().toISOString();
@@ -60,8 +60,8 @@ class Logger {
     }
 
     // Remote logging disabled for Stage 1 to prevent 405 errors
-    const isRemoteLoggingEnabled = false;
-    if (isRemoteLoggingEnabled && this.isProd && (level === 'error' || level === 'warn')) {
+    const isRemoteLoggingEnabled = this.isProd || import.meta.env.VITE_ENABLE_REMOTE_LOGS === 'true';
+    if (isRemoteLoggingEnabled) {
       this.sendToRemote(entry);
     }
 
@@ -76,19 +76,14 @@ class Logger {
 
     try {
       const payload = JSON.stringify(entry);
-      if (typeof navigator.sendBeacon === 'function') {
-        const blob = new Blob([payload], { type: 'application/json' });
-        navigator.sendBeacon(this.logEndpoint, blob);
-      } else {
-        void fetch(this.logEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: payload,
-          keepalive: true,
-        }).catch(() => {
-          // Gracefully ignore network errors on log shipping
-        });
-      }
+      void fetch(this.logEndpoint, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: payload,
+        keepalive: true,
+      }).catch(() => {
+        // Gracefully ignore network errors on log shipping
+      });
     } catch {
       // Prevent recursive crashes in telemetry dispatch
     }

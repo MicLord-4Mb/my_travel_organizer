@@ -223,6 +223,50 @@ export const apiSlice = createApi({
     }),
 
     /**
+     * Reorders itinerary events with optimistic UI update and sequential persistence.
+     */
+    reorderEvents: builder.mutation<
+      void,
+      { tripId: string; events: PlaceEvent[] }
+    >({
+      queryFn: async ({ events }, _queryApi, _extraOptions, baseQuery) => {
+        for (const event of events) {
+          const res = await baseQuery({
+            url: `events/${event.id}`,
+            method: 'PATCH',
+            body: {
+              order: event.order,
+              updatedAt: new Date().toISOString(),
+            },
+          });
+          if (res.error) return { error: res.error };
+        }
+        return { data: undefined };
+      },
+      async onQueryStarted({ tripId, events }, { dispatch, queryFulfilled }) {
+        const orderMap = new Map(events.map((e) => [e.id, e.order]));
+        const patchResult = dispatch(
+          apiSlice.util.updateQueryData('getEventsByTripId', tripId, (draft) => {
+            for (const item of draft) {
+              const nextOrder = orderMap.get(item.id);
+              if (nextOrder !== undefined) {
+                item.order = nextOrder;
+              }
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
+      invalidatesTags: (_result, _error, { tripId }) => [
+        { type: 'Event', id: `TRIP_${tripId}` },
+      ],
+    }),
+
+    /**
      * Deletes an itinerary event by ID.
      */
     deleteEvent: builder.mutation<void, { id: string; tripId: string }>({
@@ -493,6 +537,7 @@ export const {
   useGetEventsByTripIdQuery,
   useCreateEventMutation,
   useUpdateEventMutation,
+  useReorderEventsMutation,
   useDeleteEventMutation,
   useGetExpensesQuery,
   useGetExpensesByTripIdQuery,

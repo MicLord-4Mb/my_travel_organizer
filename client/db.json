@@ -178,7 +178,7 @@
       "notes": "Reserved table for 2 • Famous ricotta hotcakes",
       "bookingRef": "RES-BILLS-92",
       "createdAt": "2026-10-13T08:30:00.000Z",
-      "updatedAt": "2026-10-14T17:36:33.661Z"
+      "updatedAt": "2026-10-19T00:07:51.557Z"
     },
     {
       "id": "mock-event-2",
@@ -199,7 +199,7 @@
       },
       "notes": "Bring comfortable walking shoes • Sake barrels photo spot",
       "createdAt": "2026-10-13T10:00:00.000Z",
-      "updatedAt": "2026-10-14T17:36:33.662Z"
+      "updatedAt": "2026-10-19T00:07:52.022Z"
     },
     {
       "id": "mock-event-3",
@@ -220,7 +220,7 @@
       },
       "notes": "Expect 20 min solo booth queue • Tonkotsu extra chashu",
       "createdAt": "2026-10-13T13:15:00.000Z",
-      "updatedAt": "2026-10-14T17:36:33.662Z"
+      "updatedAt": "2026-10-19T00:07:52.456Z"
     },
     {
       "id": "mock-event-4",
@@ -241,7 +241,7 @@
       },
       "notes": "Suica card tapped • Platform 2 inner loop",
       "createdAt": "2026-10-13T15:30:00.000Z",
-      "updatedAt": "2026-10-14T17:36:33.662Z"
+      "updatedAt": "2026-10-19T00:07:52.906Z"
     },
     {
       "id": "mock-event-5",
@@ -263,7 +263,7 @@
       "notes": "Ticket QR ready (Slot 17:00-17:20) • Sunset golden hour",
       "bookingRef": "QR-SKY-771",
       "createdAt": "2026-10-13T17:00:00.000Z",
-      "updatedAt": "2026-10-14T17:36:33.662Z"
+      "updatedAt": "2026-10-19T00:07:53.341Z"
     },
     {
       "id": "mock-event-6",
@@ -285,7 +285,7 @@
       "notes": "Ref #HG-890211 • 8th Fl Terrace Godzilla",
       "bookingRef": "HG-890211",
       "createdAt": "2026-10-13T20:00:00.000Z",
-      "updatedAt": "2026-10-14T17:36:33.662Z"
+      "updatedAt": "2026-10-19T00:07:53.774Z"
     },
     {
       "id": "mock-event-d3-1",
