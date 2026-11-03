@@ -6,26 +6,32 @@ import {
   Plus,
   Minus,
   Navigation,
+  Moon,
 } from 'lucide-react';
 import type { PlaceEvent, EventCategory, EntityId } from '@shared/types/models';
 import {
   type TransitMode,
+  type CarryOverStop,
   getCoordinatesDistanceKm,
   formatTimeWithPeriod,
+  formatDurationLabel,
+  getEventDurationMinutes,
+  projectRouteMarkers,
 } from '@entities/itinerary';
 import { StopInspector } from './StopInspector';
-import { useToast } from '@shared/ui';
 import styles from './RouteMapInspector.module.css';
 
 export interface RouteMapInspectorProps {
   dayNumber: number;
   events: PlaceEvent[];
+  carryOver?: CarryOverStop | null;
   selectedEventId: EntityId | null;
   transitMode: TransitMode;
   onSelectEvent: (eventId: EntityId | null) => void;
   onTransitModeChange: (mode: TransitMode) => void;
   onEditEvent: (event: PlaceEvent) => void;
   onDeleteEvent: (event: PlaceEvent) => void;
+  onReorderEvents?: (reordered: PlaceEvent[]) => void;
 }
 
 const CATEGORY_COLORS: Record<EventCategory, string> = {
@@ -35,34 +41,40 @@ const CATEGORY_COLORS: Record<EventCategory, string> = {
   lodging: 'var(--color-category-lodging)',
 };
 
-// Preset positions for realistic aesthetic presentation in the map container (percentages)
-const DEFAULT_PRESET_POSITIONS = [
-  { top: 22, left: 28 },
-  { top: 40, left: 45 },
-  { top: 58, left: 52 },
-  { top: 72, left: 68 },
-  { top: 82, left: 42 },
-  { top: 32, left: 74 },
-  { top: 50, left: 24 },
-];
-
 export const RouteMapInspector: React.FC<RouteMapInspectorProps> = ({
   dayNumber,
   events,
+  carryOver,
   selectedEventId,
   transitMode,
   onSelectEvent,
   onTransitModeChange,
   onEditEvent,
   onDeleteEvent,
+  onReorderEvents,
 }) => {
-  const { toast } = useToast();
   const [zoomLevel, setZoomLevel] = useState(1);
 
-  // Compute geocoded stops and the total distance over legs where both stops have coordinates
+  const carryOverOrigin = carryOver?.sourceEvent ?? null;
+
+  // Compute geocoded stops and the total distance over legs (including carry-over origin -> first stop)
   const { geocodedCount, totalDistanceKm } = useMemo(() => {
     let dist = 0;
     let knownLegs = 0;
+
+    if (carryOverOrigin && events.length > 0) {
+      const firstLeg = getCoordinatesDistanceKm(
+        carryOverOrigin.location?.lat,
+        carryOverOrigin.location?.lng,
+        events[0].location?.lat,
+        events[0].location?.lng
+      );
+      if (firstLeg !== null) {
+        dist += firstLeg;
+        knownLegs += 1;
+      }
+    }
+
     for (let i = 0; i < events.length - 1; i++) {
       const e1 = events[i];
       const e2 = events[i + 1];
@@ -83,12 +95,15 @@ export const RouteMapInspector: React.FC<RouteMapInspectorProps> = ({
       ).length,
       totalDistanceKm: knownLegs > 0 ? Math.round(dist * 10) / 10 : null,
     };
-  }, [events]);
+  }, [events, carryOverOrigin]);
 
-  const selectedEvent = useMemo(
-    () => (selectedEventId ? events.find((e) => e.id === selectedEventId) : null),
-    [events, selectedEventId]
-  );
+  const selectedEvent = useMemo(() => {
+    if (!selectedEventId) return null;
+    if (carryOverOrigin && carryOverOrigin.id === selectedEventId) {
+      return carryOverOrigin;
+    }
+    return events.find((e) => e.id === selectedEventId) ?? null;
+  }, [events, carryOverOrigin, selectedEventId]);
 
   // Next stop for the live transit banner
   const nextStop = useMemo(() => {
@@ -96,29 +111,85 @@ export const RouteMapInspector: React.FC<RouteMapInspectorProps> = ({
     return events[1] || events[0];
   }, [events]);
 
-  // Generate marker coordinates
-  const markerPositions = useMemo(() => {
-    return events.map((event, index) => {
-      // Use preset visual coordinates for consistent, non-overlapping canvas pins
-      const preset =
-        DEFAULT_PRESET_POSITIONS[index % DEFAULT_PRESET_POSITIONS.length];
-      return {
-        event,
-        index: index + 1,
-        topPercent: preset.top,
-        leftPercent: preset.left,
-      };
-    });
-  }, [events]);
+  // Project markers from real geographic (lat, lng) coordinates
+  const markerPositions = useMemo(
+    () => projectRouteMarkers(events, carryOverOrigin),
+    [events, carryOverOrigin]
+  );
 
-  // Build SVG polyline points string
-  const svgPathD = useMemo(() => {
-    if (markerPositions.length < 2) return '';
-    const points = markerPositions.map(
-      (m) => `${(m.leftPercent * 3.6).toFixed(0)},${(m.topPercent * 3.4).toFixed(0)}`
-    );
-    return `M ${points.join(' L ')}`;
+  // Build directed SVG route segments connecting markers in visit order
+  const svgSegments = useMemo(() => {
+    if (markerPositions.length < 2) return [];
+    const segs: Array<{
+      key: string;
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      isCarryOverLeg: boolean;
+    }> = [];
+    for (let i = 0; i < markerPositions.length - 1; i++) {
+      const m1 = markerPositions[i];
+      const m2 = markerPositions[i + 1];
+      segs.push({
+        key: `${m1.event.id}->${m2.event.id}-${i}`,
+        x1: Number((m1.leftPercent * 3.6).toFixed(1)),
+        y1: Number((m1.topPercent * 3.4).toFixed(1)),
+        x2: Number((m2.leftPercent * 3.6).toFixed(1)),
+        y2: Number((m2.topPercent * 3.4).toFixed(1)),
+        isCarryOverLeg: Boolean(m1.isCarryOverOrigin),
+      });
+    }
+    return segs;
   }, [markerPositions]);
+
+  // Nearest-neighbor geographic route optimizer
+  const handleOptimizeRoute = () => {
+    if (!onReorderEvents || events.length < 3) return;
+    const remaining = [...events];
+    const ordered: PlaceEvent[] = [];
+
+    // If there is a carry-over origin with coordinates, start from the stop closest to it;
+    // otherwise keep the first stop anchored as the day's starting point.
+    let currentAnchor: PlaceEvent;
+    if (
+      carryOverOrigin?.location?.lat != null &&
+      carryOverOrigin?.location?.lng != null
+    ) {
+      currentAnchor = carryOverOrigin;
+    } else {
+      const first = remaining.shift()!;
+      ordered.push(first);
+      currentAnchor = first;
+    }
+
+    while (remaining.length > 0) {
+      let bestIdx = 0;
+      let bestDist = Infinity;
+
+      for (let i = 0; i < remaining.length; i++) {
+        const candidate = remaining[i];
+        const d = getCoordinatesDistanceKm(
+          currentAnchor.location?.lat,
+          currentAnchor.location?.lng,
+          candidate.location?.lat,
+          candidate.location?.lng
+        );
+        const score = d !== null ? d : 999999 + i;
+        if (score < bestDist) {
+          bestDist = score;
+          bestIdx = i;
+        }
+      }
+
+      const [chosen] = remaining.splice(bestIdx, 1);
+      ordered.push(chosen);
+      currentAnchor = chosen;
+    }
+
+    const updated = ordered.map((item, idx) => ({ ...item, order: idx }));
+    onReorderEvents(updated);
+  };
 
   return (
     <aside aria-label="Route Map and Stop Inspector" className={styles.inspectorAside}>
@@ -133,9 +204,6 @@ export const RouteMapInspector: React.FC<RouteMapInspectorProps> = ({
             <span className={styles.mapSubtitle}>
               {geocodedCount} geocoded stops •{' '}
               {totalDistanceKm !== null ? `${totalDistanceKm} km total distance` : 'distance unknown'}
-            </span>
-            <span style={{ fontSize: 'var(--font-size-micro)', color: 'var(--color-status-warning)', marginTop: '2px', display: 'block' }}>
-              Interactive map coming in Stage 2 (Static Preview)
             </span>
           </div>
 
@@ -179,52 +247,85 @@ export const RouteMapInspector: React.FC<RouteMapInspectorProps> = ({
             }}
           />
 
-          {/* SVG Polyline */}
-          {svgPathD && (
+          {/* Directed SVG Route Graph */}
+          {svgSegments.length > 0 && (
             <svg
               className={styles.mapSvgPolyline}
               viewBox="0 0 360 340"
               preserveAspectRatio="none"
+              data-testid="route-graph-svg"
             >
-              <path
-                d={svgPathD}
-                fill="none"
-                stroke="var(--color-primary)"
-                strokeWidth="3.5"
-                strokeDasharray="6,4"
-                strokeLinecap="round"
-              />
+              <defs>
+                <marker
+                  id="route-arrow"
+                  viewBox="0 0 10 10"
+                  refX="8"
+                  refY="5"
+                  markerWidth="5"
+                  markerHeight="5"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--color-primary)" />
+                </marker>
+              </defs>
+              {svgSegments.map((seg) => (
+                <line
+                  key={seg.key}
+                  x1={seg.x1}
+                  y1={seg.y1}
+                  x2={seg.x2}
+                  y2={seg.y2}
+                  stroke={
+                    seg.isCarryOverLeg
+                      ? 'var(--color-category-lodging)'
+                      : 'var(--color-primary)'
+                  }
+                  strokeWidth="3"
+                  strokeDasharray={seg.isCarryOverLeg ? '4,4' : '6,4'}
+                  strokeLinecap="round"
+                  markerEnd="url(#route-arrow)"
+                />
+              ))}
             </svg>
           )}
 
-          {/* Pins */}
-          {markerPositions.map(({ event, index, topPercent, leftPercent }) => {
-            const isSelected = selectedEventId === event.id;
-            const cat = (event.category || 'activities') as EventCategory;
-            const pinColor = CATEGORY_COLORS[cat] || 'var(--color-category-activities)';
+          {/* Pins anchored at projected geographic coordinates */}
+          {markerPositions.map(
+            ({ event, index, topPercent, leftPercent, isCarryOverOrigin, hasCoordinates }) => {
+              const isSelected = selectedEventId === event.id;
+              const cat = (event.category || 'activities') as EventCategory;
+              const pinColor = isCarryOverOrigin
+                ? 'var(--color-category-lodging)'
+                : CATEGORY_COLORS[cat] || 'var(--color-category-activities)';
 
-            return (
-              <div
-                key={event.id}
-                className={`${styles.mapMarker} ${
-                  isSelected ? styles.mapMarkerSelected : ''
-                }`}
-                style={{ top: `${topPercent}%`, left: `${leftPercent}%` }}
-                onClick={() => onSelectEvent(isSelected ? null : event.id)}
-                title={`${index}. ${event.title}`}
-              >
+              return (
                 <div
-                  className={`${styles.markerPin} ${
-                    isSelected ? styles.markerPinSelected : ''
+                  key={isCarryOverOrigin ? `carry-${event.id}` : event.id}
+                  data-testid={`map-marker-${isCarryOverOrigin ? 'carry' : event.id}`}
+                  className={`${styles.mapMarker} ${
+                    isSelected ? styles.mapMarkerSelected : ''
                   }`}
-                  style={{ background: pinColor }}
+                  style={{ top: `${topPercent}%`, left: `${leftPercent}%` }}
+                  onClick={() => onSelectEvent(isSelected ? null : event.id)}
+                  title={
+                    isCarryOverOrigin
+                      ? `Overnight start: ${event.title}`
+                      : `${index}. ${event.title}${hasCoordinates ? '' : ' (no GPS)'}`
+                  }
                 >
-                  {index}
+                  <div
+                    className={`${styles.markerPin} ${
+                      isSelected ? styles.markerPinSelected : ''
+                    } ${!hasCoordinates ? styles.markerPinApproximate : ''}`}
+                    style={{ background: pinColor }}
+                  >
+                    {isCarryOverOrigin ? <Moon size={12} /> : index}
+                  </div>
+                  <span className={styles.markerLabel}>{event.title}</span>
                 </div>
-                <span className={styles.markerLabel}>{event.title}</span>
-              </div>
-            );
-          })}
+              );
+            }
+          )}
 
           {/* Zoom controls */}
           <div className={styles.zoomControls}>
@@ -268,21 +369,47 @@ export const RouteMapInspector: React.FC<RouteMapInspectorProps> = ({
           <div className={styles.sequenceSheet}>
             <div className={styles.sequenceHeader}>
               <span className={styles.sequenceTitle}>Waypoint Sequence</span>
-              <button
-                type="button"
-                className={styles.optimizeBtn}
-                onClick={() => toast({ title: 'Not Implemented', description: 'Route Optimization (TSP solver) is coming in Stage 2!' })}
-                title="Route waypoints are chronologically organized"
-              >
-                Optimize Route
-              </button>
+              {onReorderEvents && events.length >= 3 && (
+                <button
+                  type="button"
+                  className={styles.optimizeBtn}
+                  onClick={handleOptimizeRoute}
+                  title="Reorder stops to minimize travel distance"
+                >
+                  Optimize Route
+                </button>
+              )}
             </div>
 
             <div className={styles.waypointsList}>
+              {carryOver && (
+                <div
+                  className={styles.waypointItem}
+                  onClick={() => onSelectEvent(carryOver.sourceEvent.id)}
+                >
+                  <div className={styles.waypointLeft}>
+                    <span
+                      className={styles.waypointNum}
+                      style={{ background: 'var(--color-category-lodging)' }}
+                    >
+                      <Moon size={11} />
+                    </span>
+                    <span className={styles.waypointName}>
+                      {carryOver.sourceEvent.title} (from Day {carryOver.sourceDayIndex + 1})
+                    </span>
+                  </div>
+                  <span className={styles.waypointTime}>
+                    Ends {formatTimeWithPeriod(carryOver.endTime).time}{' '}
+                    {formatTimeWithPeriod(carryOver.endTime).period}
+                  </span>
+                </div>
+              )}
+
               {events.map((event, i) => {
                 const cat = (event.category || 'activities') as EventCategory;
                 const color = CATEGORY_COLORS[cat] || 'var(--color-category-activities)';
                 const time = formatTimeWithPeriod(event.startTime);
+                const durationLabel = formatDurationLabel(getEventDurationMinutes(event));
 
                 return (
                   <div
@@ -299,11 +426,10 @@ export const RouteMapInspector: React.FC<RouteMapInspectorProps> = ({
                       </span>
                       <span className={styles.waypointName}>{event.title}</span>
                     </div>
-                    {event.startTime && (
-                      <span className={styles.waypointTime}>
-                        {time.time} {time.period}
-                      </span>
-                    )}
+                    <span className={styles.waypointTime}>
+                      {event.startTime ? `${time.time} ${time.period} • ` : ''}
+                      {durationLabel}
+                    </span>
                   </div>
                 );
               })}

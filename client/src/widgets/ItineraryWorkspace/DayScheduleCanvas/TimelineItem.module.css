@@ -224,6 +224,40 @@
   font-weight: 500;
 }
 
+.durationBadge {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-container-low);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-micro);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.overnightBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-category-lodging-bg);
+  color: var(--color-category-lodging);
+  font-size: var(--font-size-micro);
+  font-weight: 600;
+}
+
+.overrunBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-status-warning-bg);
+  color: var(--color-status-warning-text);
+  font-size: var(--font-size-micro);
+  font-weight: 600;
+}
+
 .cardActions {
   display: flex;
   align-items: center;

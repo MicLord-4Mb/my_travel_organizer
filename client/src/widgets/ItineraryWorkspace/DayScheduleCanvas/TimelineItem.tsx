@@ -8,14 +8,22 @@ import {
   Edit2,
   Trash2,
   QrCode,
+  Clock,
+  Moon,
+  AlertTriangle,
 } from 'lucide-react';
 import type { PlaceEvent, EventCategory } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
-import { formatTimeWithPeriod } from '@entities/itinerary';
+import {
+  formatTimeWithPeriod,
+  formatDurationLabel,
+  getEventDurationMinutes,
+  type ScheduledPlaceEvent,
+} from '@entities/itinerary';
 import styles from './TimelineItem.module.css';
 
 export interface TimelineItemProps {
-  event: PlaceEvent;
+  event: PlaceEvent | ScheduledPlaceEvent;
   isSelected?: boolean;
   isDragDisabled?: boolean;
   isOverlay?: boolean;
@@ -83,6 +91,12 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
   const catKey = (event.category || 'activities') as EventCategory;
   const cat = CATEGORY_CONFIG[catKey] || CATEGORY_CONFIG.activities;
   const timeFormatted = formatTimeWithPeriod(event.startTime);
+  const endTimeFormatted = event.endTime ? formatTimeWithPeriod(event.endTime) : null;
+  const durationMinutes = getEventDurationMinutes(event);
+  const isOvernightSpillover =
+    'isOvernightSpillover' in event && Boolean(event.isOvernightSpillover);
+  const exceedsTargetEnd =
+    'exceedsTargetEnd' in event && Boolean(event.exceedsTargetEnd);
 
   const handleCardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.target !== e.currentTarget) return;
@@ -196,8 +210,34 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
             </div>
           </div>
 
-          {/* Location & Metadata notes */}
+          {/* Location, Stay Duration & Metadata notes */}
           <div className={styles.metaRow}>
+            <span className={`${styles.metaItem} ${styles.durationBadge}`} title="Stay duration at this stop">
+              <Clock size={13} />
+              <span>
+                {formatDurationLabel(durationMinutes)}
+                {event.startTime && endTimeFormatted
+                  ? ` (${timeFormatted.time} ${timeFormatted.period} → ${endTimeFormatted.time} ${endTimeFormatted.period})`
+                  : ''}
+              </span>
+            </span>
+
+            {isOvernightSpillover && (
+              <span className={styles.overnightBadge}>
+                <Moon size={12} />
+                <span>
+                  Continues to Day {(event.dayIndex ?? 0) + 2} (until {event.endTime})
+                </span>
+              </span>
+            )}
+
+            {exceedsTargetEnd && !isOvernightSpillover && (
+              <span className={styles.overrunBadge}>
+                <AlertTriangle size={12} />
+                <span>Past target day end</span>
+              </span>
+            )}
+
             {event.location?.name && (
               <span className={styles.metaItem}>
                 <MapPin size={14} color={cat.color} />

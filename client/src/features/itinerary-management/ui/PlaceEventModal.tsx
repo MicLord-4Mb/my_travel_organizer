@@ -17,6 +17,10 @@ import {
 import { Dialog, Button, Input, Select, useToast } from '@shared/ui';
 import type { PlaceEvent, EventCategory } from '@shared/types/models';
 import {
+  getEventDurationMinutes,
+  formatDurationLabel,
+} from '@entities/itinerary';
+import {
   placeEventSchema,
   type PlaceEventFormData,
 } from '@features/itinerary-management/model/placeEventSchema';
@@ -118,6 +122,7 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
       dayIndex: defaultDayIndex,
       startTime: '',
       endTime: '',
+      durationMinutes: 60,
       cost: 0,
       currency: tripCurrency,
       locationName: '',
@@ -130,6 +135,7 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
   });
 
   const selectedCategory = useWatch({ control, name: 'category' });
+  const watchedDuration = Number(useWatch({ control, name: 'durationMinutes' })) || 60;
 
   useEffect(() => {
     if (open) {
@@ -140,6 +146,7 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
           dayIndex: eventToEdit.dayIndex,
           startTime: eventToEdit.startTime || '',
           endTime: eventToEdit.endTime || '',
+          durationMinutes: getEventDurationMinutes(eventToEdit),
           cost: eventToEdit.cost || 0,
           currency: eventToEdit.currency || tripCurrency,
           locationName: eventToEdit.location?.name || '',
@@ -156,6 +163,7 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
           dayIndex: defaultDayIndex,
           startTime: '',
           endTime: '',
+          durationMinutes: 60,
           cost: 0,
           currency: tripCurrency,
           locationName: '',
@@ -260,20 +268,59 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
           {...register('title')}
         />
 
-        {/* Day, Start Time, End Time */}
-        <div className={styles.rowThree}>
-          <Select
-            label="Assigned Day"
-            labelIcon={<Calendar size={14} />}
-            options={dayOptions}
-            error={errors.dayIndex?.message}
-            {...register('dayIndex')}
-          />
+        {/* Day, Stay Duration, Start/End Time */}
+        <div className={styles.durationSection}>
+          <div className={styles.row}>
+            <Select
+              label="Assigned Day"
+              labelIcon={<Calendar size={14} />}
+              options={dayOptions}
+              error={errors.dayIndex?.message}
+              {...register('dayIndex')}
+            />
 
+            <Input
+              label="Stay Duration (min)"
+              labelIcon={<Clock size={14} />}
+              labelRight={
+                <span className={styles.durationHintBadge}>
+                  {formatDurationLabel(watchedDuration)}
+                </span>
+              }
+              type="number"
+              min="5"
+              max="1440"
+              step="5"
+              error={errors.durationMinutes?.message}
+              {...register('durationMinutes')}
+            />
+          </div>
+
+          <div className={styles.durationPresets} aria-label="Stay duration quick presets">
+            {[30, 60, 120, 240, 480].map((mins) => (
+              <button
+                key={mins}
+                type="button"
+                className={`${styles.durationChip} ${
+                  watchedDuration === mins ? styles.durationChipActive : ''
+                }`}
+                onClick={() =>
+                  setValue('durationMinutes', mins, { shouldValidate: true })
+                }
+              >
+                {formatDurationLabel(mins)}
+                {mins >= 480 ? ' (Overnight)' : ''}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.row}>
           <Input
             label="Start Time"
             labelIcon={<Clock size={14} />}
             type="time"
+            helperText="Auto-calculated along route chain"
             error={errors.startTime?.message}
             {...register('startTime')}
           />
@@ -282,6 +329,7 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
             label="End Time"
             labelIcon={<Clock size={14} />}
             type="time"
+            helperText="Auto-calculated from stay duration"
             error={errors.endTime?.message}
             {...register('endTime')}
           />

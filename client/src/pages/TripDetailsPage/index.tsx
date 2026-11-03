@@ -5,12 +5,18 @@ import {
   useGetEventsByTripIdQuery,
   useCreateEventMutation,
   useUpdateEventMutation,
-  useDeleteEventMutation, useReorderEventsMutation,
+  useDeleteEventMutation,
+  useReorderEventsMutation,
 } from '@shared/api/apiSlice';
 import { useActiveTrip } from '@entities/trip';
-import type { PlaceEvent, EventCategory } from '@shared/types/models';
+import type {
+  PlaceEvent,
+  EventCategory,
+  DayScheduleBounds,
+} from '@shared/types/models';
 import {
   planEventDayChange,
+  computeTripSchedule,
   type ItineraryCategoryFilter,
   type TransitMode,
 } from '@entities/itinerary';
@@ -38,9 +44,9 @@ import styles from './TripDetailsPage.module.css';
  * - `TripContextHeader`: Displays title, duration, budget progress, and quick action controls.
  * - `StickyDayRail`: Horizontal scrollable day switcher with date tags and event counts.
  * - `DayScheduleCanvas`: Interactive vertical timeline with Drag-and-Drop event reordering,
- *   quick event insertion, and category filtering.
- * - `RouteMapInspector`: Interactive route visualizer, transit segment estimations,
- *   and stop inspector sidebar.
+ *   cascaded arrival/departure times, overnight carry-overs, and day start/end bounds.
+ * - `RouteMapInspector`: Geographic route visualizer with real lat/lng projection,
+ *   directed route graph, transit segment estimations, and stop inspector sidebar.
  */
 export default function TripDetailsPage() {
   const { id: routeTripId } = useParams<{ id: string }>();
@@ -79,14 +85,27 @@ export default function TripDetailsPage() {
   }, [activeTrip, allEvents, rates, baseCurrency]);
 
   // Derived safe day index clamped to valid range without cascading effect
-  const safeDayIndex = tripDays.length > 0 ? Math.min(Math.max(0, activeDayIndex), tripDays.length - 1) : 0;
+  const safeDayIndex =
+    tripDays.length > 0 ? Math.min(Math.max(0, activeDayIndex), tripDays.length - 1) : 0;
 
-  const activeDayEvents = useMemo(() => {
-    const maxDayIdx = Math.max(0, tripDays.length - 1);
-    return allEvents
-      .filter((e) => Math.min(Math.max(0, e.dayIndex ?? 0), maxDayIdx) === safeDayIndex)
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  }, [allEvents, safeDayIndex, tripDays.length]);
+  // 2. Compute cascaded timeline schedules across all days (including overnight carry-overs)
+  const computedSchedules = useMemo(
+    () =>
+      computeTripSchedule(
+        allEvents,
+        Math.max(1, tripDays.length),
+        transitMode,
+        activeTrip?.daySchedules
+      ),
+    [allEvents, tripDays.length, transitMode, activeTrip?.daySchedules]
+  );
+
+  const activeDaySchedule = computedSchedules[safeDayIndex] ?? computedSchedules[0];
+
+  const activeDayEvents = useMemo(
+    () => activeDaySchedule?.events ?? [],
+    [activeDaySchedule]
+  );
 
   const filteredEvents = useMemo(() => {
     if (categoryFilter === 'all') return activeDayEvents;
@@ -134,13 +153,13 @@ export default function TripDetailsPage() {
       toast({
         title: 'Success',
         description: 'Added a new day to the trip',
-        variant: 'success'
+        variant: 'success',
       });
     } catch (err) {
       toast({
         title: 'Error',
         description: err instanceof Error ? err.message : 'Failed to add day',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -172,14 +191,14 @@ export default function TripDetailsPage() {
       toast({
         title: 'Deleted',
         description: 'Activity successfully removed',
-        variant: 'success'
+        variant: 'success',
       });
       setEventToDelete(null);
     } catch (err) {
       toast({
         title: 'Error',
         description: err instanceof Error ? err.message : 'Failed to delete activity',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setIsDeletingEvent(false);
@@ -197,6 +216,26 @@ export default function TripDetailsPage() {
       toast({
         title: 'Error',
         description: 'Failed to save new event order',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleUpdateDayBounds = async (bounds: DayScheduleBounds) => {
+    if (!activeTrip) return;
+    const nextDaySchedules: Record<string, DayScheduleBounds> = {
+      ...(activeTrip.daySchedules ?? {}),
+      [String(safeDayIndex)]: bounds,
+    };
+    try {
+      await updateTripMutation({
+        id: activeTrip.id,
+        payload: { daySchedules: nextDaySchedules },
+      }).unwrap();
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to save day time window',
         variant: 'destructive',
       });
     }
@@ -220,6 +259,7 @@ export default function TripDetailsPage() {
           category: formData.category,
           dayIndex: formData.dayIndex,
           ...(dayPlan ? { order: dayPlan.targetOrder } : {}),
+          durationMinutes: formData.durationMinutes,
           startTime: formData.startTime || undefined,
           endTime: formData.endTime || undefined,
           cost: formData.cost,
@@ -242,15 +282,19 @@ export default function TripDetailsPage() {
         }).unwrap();
       }
     } else {
-      const targetDayEvents = allEvents.filter(e => e.dayIndex === formData.dayIndex);
-      const order = targetDayEvents.length > 0 ? Math.max(...targetDayEvents.map(e => e.order ?? 0)) + 1 : 0;
-      
+      const targetDayEvents = allEvents.filter((e) => e.dayIndex === formData.dayIndex);
+      const order =
+        targetDayEvents.length > 0
+          ? Math.max(...targetDayEvents.map((e) => e.order ?? 0)) + 1
+          : 0;
+
       await createEvent({
         tripId: activeTrip.id,
         title: formData.title,
         category: formData.category,
         dayIndex: formData.dayIndex,
         order,
+        durationMinutes: formData.durationMinutes,
         startTime: formData.startTime || undefined,
         endTime: formData.endTime || undefined,
         cost: formData.cost,
@@ -332,6 +376,7 @@ export default function TripDetailsPage() {
         <DayScheduleCanvas
           events={activeDayEvents}
           filteredEvents={filteredEvents}
+          daySchedule={activeDaySchedule}
           dayLabel={activeDayInfo?.fullLabel || `Day ${safeDayIndex + 1}`}
           dayNumber={safeDayIndex + 1}
           currentFilter={categoryFilter}
@@ -343,18 +388,21 @@ export default function TripDetailsPage() {
           onDeleteEvent={handleDeleteActivity}
           onReorderEvents={handleReorderEvents}
           onAddActivity={handleOpenAddActivity}
+          onUpdateDayBounds={handleUpdateDayBounds}
         />
 
         {/* Right Column: 5 Cols Route Map & Stop Inspector */}
         <RouteMapInspector
           dayNumber={safeDayIndex + 1}
           events={activeDayEvents}
+          carryOver={activeDaySchedule?.carryOver}
           selectedEventId={selectedEventId}
           transitMode={transitMode}
           onSelectEvent={(id) => setSelectedEventId(id)}
           onTransitModeChange={(mode) => setTransitMode(mode)}
           onEditEvent={handleOpenEditActivity}
           onDeleteEvent={handleDeleteActivity}
+          onReorderEvents={handleReorderEvents}
         />
       </div>
 

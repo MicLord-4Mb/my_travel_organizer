@@ -6,6 +6,192 @@
   min-width: 0;
 }
 
+.dayBoundsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: 10px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-level-1);
+}
+
+.boundsInputsGroup {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.boundControl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.boundIcon {
+  color: var(--color-primary);
+}
+
+.boundLabel {
+  white-space: nowrap;
+}
+
+.boundTimeInput {
+  padding: 3px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-container-low);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-caption);
+  font-family: inherit;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.boundTimeInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-focus);
+}
+
+.boundArrow {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+
+.shiftedStartBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-category-lodging-bg);
+  color: var(--color-category-lodging);
+  font-size: var(--font-size-micro);
+  font-weight: 600;
+}
+
+.boundsStatusGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.finishEstimatePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-micro);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.finishEstimateOk {
+  background: var(--color-status-success-bg);
+  color: var(--color-status-success-text);
+}
+
+.finishEstimateOverrun {
+  background: var(--color-status-warning-bg);
+  color: var(--color-status-warning-text);
+  border: 1px solid var(--color-status-warning-border);
+}
+
+.carryOverCard {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 12px 16px;
+  margin-bottom: var(--space-sm);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-category-lodging);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-level-1);
+  cursor: pointer;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.carryOverCard:hover,
+.carryOverCard:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-level-2);
+}
+
+.carryOverIconWrap {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  background: var(--color-category-lodging-bg);
+  color: var(--color-category-lodging);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.carryOverContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.carryOverTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.carryOverTag {
+  font-size: var(--font-size-micro);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-category-lodging);
+}
+
+.carryOverEndBadge {
+  font-size: var(--font-size-micro);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.carryOverTitleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.carryOverTitle {
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.carryOverLocation {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
 .timelineStream {
   position: relative;
   display: flex;

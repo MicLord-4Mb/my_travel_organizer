@@ -56,8 +56,11 @@
   --color-status-danger-bg: rgba(239, 68, 68, 0.1);
   --color-status-warning: #F59E0B;
   --color-status-warning-bg: rgba(245, 158, 11, 0.1);
+  --color-status-warning-text: #B45309;
+  --color-status-warning-border: rgba(245, 158, 11, 0.35);
   --color-status-success: #10B981;
   --color-status-success-bg: rgba(16, 185, 129, 0.1);
+  --color-status-success-text: #047857;
 
   /* Elevation Shadows */
   --shadow-level-1: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);

@@ -86,6 +86,16 @@ export interface RegisterCredentials {
 export type TripStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
 
 /**
+ * Per-day schedule time window configured by the user.
+ */
+export interface DayScheduleBounds {
+  /** Planned start time of the day in 24h HH:mm format (default '08:00') */
+  startTime: string;
+  /** Target end time limit of the day in 24h HH:mm format (default '22:00') */
+  endTime: string;
+}
+
+/**
  * Represents a user's travel project / trip plan.
  */
 export interface Trip extends AuditableEntity {
@@ -112,6 +122,8 @@ export interface Trip extends AuditableEntity {
   location?: string;
   /** Specific spending limits per category */
   categoryBudgets?: Partial<Record<string, number>>;
+  /** Per-day schedule bounds keyed by zero-based dayIndex string */
+  daySchedules?: Record<string, DayScheduleBounds>;
 }
 
 // ==========================================
@@ -159,6 +171,8 @@ export interface PlaceEvent extends AuditableEntity {
   startTime?: string;
   /** 24h end time string (HH:mm) */
   endTime?: string;
+  /** User-configured stay duration at this location in minutes */
+  durationMinutes?: number;
   /** Estimated or actual price for this event */
   cost?: number;
   /** ISO 4217 currency for the cost */

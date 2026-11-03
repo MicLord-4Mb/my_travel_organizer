@@ -43,6 +43,25 @@ export const placeEventSchema = z.object({
     .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Valid format is HH:mm (e.g. 11:00)' })
     .or(z.literal(''))
     .optional(),
+  /** User-configured stay duration at this location in minutes (5 to 1440) */
+  durationMinutes: z.preprocess(
+    (val) => {
+      if (
+        val === '' ||
+        val === null ||
+        val === undefined ||
+        (typeof val === 'number' && isNaN(val))
+      ) {
+        return undefined;
+      }
+      return Number(val);
+    },
+    z
+      .number()
+      .min(5, { message: 'Duration must be at least 5 minutes' })
+      .max(1440, { message: 'Duration cannot exceed 24 hours (1440 min)' })
+      .optional()
+  ),
   /** Optional estimated cost */
   cost: z.preprocess((val) => {
     if (val === '' || val === null || val === undefined || (typeof val === 'number' && isNaN(val))) return undefined;

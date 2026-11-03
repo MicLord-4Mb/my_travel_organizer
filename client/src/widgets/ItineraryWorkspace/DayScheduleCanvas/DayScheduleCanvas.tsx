@@ -16,9 +16,27 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { CalendarPlus } from 'lucide-react';
-import type { PlaceEvent, EventCategory, EntityId } from '@shared/types/models';
-import type { ItineraryCategoryFilter, TransitMode } from '@entities/itinerary';
+import {
+  CalendarPlus,
+  Clock,
+  Moon,
+  AlertTriangle,
+  CheckCircle2,
+  MapPin,
+} from 'lucide-react';
+import type {
+  PlaceEvent,
+  EventCategory,
+  EntityId,
+  DayScheduleBounds,
+} from '@shared/types/models';
+import {
+  formatDurationLabel,
+  formatTimeWithPeriod,
+  type ComputedDaySchedule,
+  type ItineraryCategoryFilter,
+  type TransitMode,
+} from '@entities/itinerary';
 import { TimelineFilters } from './TimelineFilters';
 import { TimelineItem } from './TimelineItem';
 import { TransitSegment } from './TransitSegment';
@@ -33,6 +51,8 @@ export interface DayScheduleCanvasProps {
   events: PlaceEvent[];
   /** Subset of events passing the active category filter (used for display rendering) */
   filteredEvents: PlaceEvent[];
+  /** Cascaded timeline computation for this day (start/end bounds, carry-over, finish check) */
+  daySchedule?: ComputedDaySchedule;
   /** Human-readable day label (e.g., "OCT 14" or "Day 3") */
   dayLabel: string;
   /** Numerical day number (1-based for user display) */
@@ -55,18 +75,21 @@ export interface DayScheduleCanvasProps {
   onReorderEvents: (reordered: PlaceEvent[]) => void;
   /** Callback fired when user clicks to add a new activity or spot */
   onAddActivity: (category?: EventCategory) => void;
+  /** Callback fired when user edits the day's start or target end time bounds */
+  onUpdateDayBounds?: (bounds: DayScheduleBounds) => void;
 }
 
 /**
  * Interactive Timeline Canvas for an individual trip day.
  *
  * Implements accessible Drag-and-Drop (`@dnd-kit`) for reordering stops,
- * dynamic transit segment calculations between consecutive geo-located stops,
- * quick action buttons, and empty-state prompting.
+ * cascaded arrival/departure calculations, overnight carry-over banners,
+ * configurable day start/end bounds, and dynamic transit segment calculations.
  */
 export const DayScheduleCanvas: React.FC<DayScheduleCanvasProps> = ({
   events,
   filteredEvents,
+  daySchedule,
   dayLabel,
   dayNumber,
   currentFilter,
@@ -78,6 +101,7 @@ export const DayScheduleCanvas: React.FC<DayScheduleCanvasProps> = ({
   onDeleteEvent,
   onReorderEvents,
   onAddActivity,
+  onUpdateDayBounds,
 }) => {
   const [activeDraggingId, setActiveDraggingId] = useState<EntityId | null>(null);
 
@@ -119,6 +143,11 @@ export const DayScheduleCanvas: React.FC<DayScheduleCanvasProps> = ({
     ? events.find((e) => e.id === activeDraggingId)
     : null;
 
+  const carryOver = daySchedule?.carryOver ?? null;
+  const finishFormatted = daySchedule?.finishTime
+    ? formatTimeWithPeriod(daySchedule.finishTime)
+    : null;
+
   return (
     <section aria-label={`Day ${dayNumber} Schedule Timeline`} className={styles.canvasContainer}>
       {/* Top Filter Bar */}
@@ -129,10 +158,143 @@ export const DayScheduleCanvas: React.FC<DayScheduleCanvasProps> = ({
         onFilterChange={onFilterChange}
       />
 
+      {/* Configurable Day Schedule Bounds & Cascade Summary Bar */}
+      {daySchedule && (
+        <div className={styles.dayBoundsBar} aria-label={`Day ${dayNumber} Time Window`}>
+          <div className={styles.boundsInputsGroup}>
+            <label className={styles.boundControl}>
+              <Clock size={13} className={styles.boundIcon} />
+              <span className={styles.boundLabel}>Day Start:</span>
+              <input
+                type="time"
+                aria-label={`Day ${dayNumber} Start Time`}
+                className={styles.boundTimeInput}
+                value={daySchedule.plannedStartTime}
+                onChange={(e) => {
+                  if (e.target.value && onUpdateDayBounds) {
+                    onUpdateDayBounds({
+                      startTime: e.target.value,
+                      endTime: daySchedule.plannedEndTime,
+                    });
+                  }
+                }}
+              />
+            </label>
+
+            <span className={styles.boundArrow}>→</span>
+
+            <label className={styles.boundControl}>
+              <span className={styles.boundLabel}>Target End:</span>
+              <input
+                type="time"
+                aria-label={`Day ${dayNumber} Target End Time`}
+                className={styles.boundTimeInput}
+                value={daySchedule.plannedEndTime}
+                onChange={(e) => {
+                  if (e.target.value && onUpdateDayBounds) {
+                    onUpdateDayBounds({
+                      startTime: daySchedule.plannedStartTime,
+                      endTime: e.target.value,
+                    });
+                  }
+                }}
+              />
+            </label>
+
+            {daySchedule.isStartShiftedByCarryOver && (
+              <span className={styles.shiftedStartBadge}>
+                <Moon size={12} />
+                <span>Starts at {daySchedule.effectiveStartTime} (after overnight stop)</span>
+              </span>
+            )}
+          </div>
+
+          <div className={styles.boundsStatusGroup}>
+            {finishFormatted && (
+              <span
+                className={`${styles.finishEstimatePill} ${
+                  daySchedule.isOverTargetEnd ? styles.finishEstimateOverrun : styles.finishEstimateOk
+                }`}
+              >
+                {daySchedule.isOverTargetEnd ? (
+                  <>
+                    <AlertTriangle size={13} />
+                    <span>
+                      Est. Finish: {finishFormatted.time} {finishFormatted.period} (+
+                      {formatDurationLabel(daySchedule.overrunMinutes)} over target)
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={13} />
+                    <span>
+                      Est. Finish: {finishFormatted.time} {finishFormatted.period}
+                    </span>
+                  </>
+                )}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Vertical Timeline Feed */}
       <div className={styles.timelineStream}>
-        {filteredEvents.length > 0 && (
+        {(filteredEvents.length > 0 || carryOver) && (
           <div className={styles.verticalGuideLine} />
+        )}
+
+        {/* Overnight Carry-Over Tail from Day N-1 */}
+        {carryOver && (
+          <>
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label={`Overnight stop continued from Day ${carryOver.sourceDayIndex + 1}: ${carryOver.sourceEvent.title}`}
+              className={styles.carryOverCard}
+              onClick={() => onSelectEvent(carryOver.sourceEvent.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onSelectEvent(carryOver.sourceEvent.id);
+                }
+              }}
+            >
+              <div className={styles.carryOverIconWrap}>
+                <Moon size={16} />
+              </div>
+              <div className={styles.carryOverContent}>
+                <div className={styles.carryOverTopRow}>
+                  <span className={styles.carryOverTag}>
+                    Continued from Day {carryOver.sourceDayIndex + 1}
+                  </span>
+                  <span className={styles.carryOverEndBadge}>
+                    Finishes at {formatTimeWithPeriod(carryOver.endTime).time}{' '}
+                    {formatTimeWithPeriod(carryOver.endTime).period}
+                  </span>
+                </div>
+                <div className={styles.carryOverTitleRow}>
+                  <strong className={styles.carryOverTitle}>
+                    {carryOver.sourceEvent.title}
+                  </strong>
+                  {carryOver.sourceEvent.location?.name && (
+                    <span className={styles.carryOverLocation}>
+                      <MapPin size={12} />
+                      {carryOver.sourceEvent.location.name}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {filteredEvents.length > 0 && (
+              <TransitSegment
+                fromEvent={carryOver.sourceEvent}
+                toEvent={filteredEvents[0]}
+                mode={transitMode}
+              />
+            )}
+          </>
         )}
 
         <DndContext
@@ -214,7 +376,7 @@ export const DayScheduleCanvas: React.FC<DayScheduleCanvasProps> = ({
         </DndContext>
 
         {/* Empty state when no events in day / filter */}
-        {filteredEvents.length === 0 && (
+        {filteredEvents.length === 0 && !carryOver && (
           <div className={styles.emptyState}>
             <CalendarPlus size={36} color="var(--color-text-muted)" />
             <h4 className={styles.emptyTitle}>No Activities Planned</h4>
