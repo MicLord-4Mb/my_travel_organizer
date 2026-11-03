@@ -9,6 +9,7 @@ import { useLoginMutation } from '@shared/api/apiSlice';
 import { useAppDispatch } from '@app/hooks';
 import { setCredentials } from '@entities/session';
 import styles from './LoginForm.module.css';
+import { getErrorMessage } from '@shared/lib/errors';
 
 interface LocationState {
   from?: {
@@ -58,9 +59,8 @@ export const LoginForm: React.FC = () => {
       const state = location.state as LocationState;
       const redirectPath = state?.from?.pathname || '/';
       navigate(redirectPath, { replace: true });
-    } catch (err: any) {
-      const message = err?.data?.message || err?.error || 'Failed to sign in. Please check your credentials.';
-      setServerError(message);
+    } catch (err: unknown) {
+      setServerError(getErrorMessage(err, 'Failed to sign in. Please check your credentials.'));
     }
   };
 

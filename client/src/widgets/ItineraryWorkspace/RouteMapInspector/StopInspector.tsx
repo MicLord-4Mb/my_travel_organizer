@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import type { PlaceEvent, EventCategory } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
-import { formatTimeWithPeriod } from '../lib/itineraryUtils';
+import { formatTimeWithPeriod } from '@entities/itinerary';
 import styles from './StopInspector.module.css';
 
 export interface StopInspectorProps {
@@ -23,10 +23,10 @@ export interface StopInspectorProps {
 }
 
 const CATEGORY_COLORS: Record<EventCategory, { label: string; color: string; bg: string }> = {
-  dining: { label: 'DINING', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.12)' },
-  activities: { label: 'ACTIVITY', color: '#10B981', bg: 'rgba(16, 185, 129, 0.12)' },
-  transport: { label: 'TRANSIT', color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.12)' },
-  lodging: { label: 'LODGING', color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.12)' },
+  dining: { label: 'DINING', color: 'var(--color-category-dining)', bg: 'var(--color-category-dining-bg)' },
+  activities: { label: 'ACTIVITY', color: 'var(--color-category-activities)', bg: 'var(--color-category-activities-bg)' },
+  transport: { label: 'TRANSIT', color: 'var(--color-category-transport)', bg: 'var(--color-category-transport-bg)' },
+  lodging: { label: 'LODGING', color: 'var(--color-category-lodging)', bg: 'var(--color-category-lodging-bg)' },
 };
 
 export const StopInspector: React.FC<StopInspectorProps> = ({

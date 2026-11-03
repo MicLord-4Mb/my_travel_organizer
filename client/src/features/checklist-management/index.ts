@@ -4,4 +4,5 @@ export { ApplyTemplateModal } from './ui/ApplyTemplateModal';
 export type { ApplyTemplateModalProps } from './ui/ApplyTemplateModal';
 export { checklistItemSchema } from './model/checklistItemSchema';
 export type { ChecklistItemFormData } from './model/checklistItemSchema';
-export { CHECKLIST_TEMPLATES } from './model/checklistTemplates';
+export { CHECKLIST_TEMPLATES } from './model/checklistTemplates';export { useChecklistBatchActions } from './model/useChecklistBatchActions';
+export type { NewChecklistItem } from './model/useChecklistBatchActions';

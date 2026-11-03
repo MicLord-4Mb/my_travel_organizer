@@ -50,7 +50,7 @@ describe('checklistItemSchema validation', () => {
     it('rejects invalid checklist type', () => {
       const result = checklistItemSchema.safeParse({
         ...validItem,
-        type: 'flight' as any,
+        type: 'flight',
       });
       expect(result.success).toBe(false);
     });

@@ -15,15 +15,18 @@ import { Badge, ProgressBar, DropdownMenu } from '@shared/ui';
 import type { Trip } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
 import { inclusiveDayCount, parseLocalDate } from '@shared/lib/date';
-import { useGetExpensesByTripIdQuery, useGetChecklistsByTripIdQuery } from '@shared/api/apiSlice';
+import { getBudgetPercent, getBudgetState } from '@entities/expense';
 import styles from './TripCard.module.css';
 
 export interface TripCardProps {
   trip: Trip;
   viewMode?: 'grid' | 'list';
-  spentBudget?: number;
-  packedCount?: number;
-  totalChecklistCount?: number;
+  /** Amount spent on the trip, already expressed in the trip currency. */
+  spentBudget: number;
+  /** Number of completed checklist items. */
+  packedCount: number;
+  /** Total number of checklist items. */
+  totalChecklistCount: number;
   onEdit: (trip: Trip) => void;
   onDuplicate: (tripId: string) => void;
   onDelete: (tripId: string) => void;
@@ -57,14 +60,14 @@ function calculateDays(startDateStr: string, endDateStr: string): number {
 export const TripCard: React.FC<TripCardProps> = ({
   trip,
   viewMode = 'grid',
-  spentBudget: propSpentBudget,
-  packedCount: propPackedCount,
-  totalChecklistCount: propTotalChecklistCount,
+  spentBudget,
+  packedCount,
+  totalChecklistCount: totalChecklist,
   onEdit,
   onDuplicate,
   onDelete,
 }) => {
-  const { format, sum } = useCurrency();
+  const { format } = useCurrency();
   const isPast = trip.status === 'completed';
   const isActive = trip.status === 'in_progress';
   const isUpcoming = trip.status === 'planned';
@@ -73,41 +76,17 @@ export const TripCard: React.FC<TripCardProps> = ({
   const totalDays = calculateDays(trip.startDate, trip.endDate);
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
 
-  const shouldFetchExpenses = propSpentBudget === undefined;
-  const shouldFetchChecklists =
-    propPackedCount === undefined || propTotalChecklistCount === undefined;
-
-  const { data: tripExpenses = [] } = useGetExpensesByTripIdQuery(trip.id, {
-    skip: !shouldFetchExpenses,
-  });
-  const { data: tripChecklists = [] } = useGetChecklistsByTripIdQuery(trip.id, {
-    skip: !shouldFetchChecklists,
-  });
-
   // Real values only: a missing budget limit / empty checklist is shown as such, never replaced by a made-up number.
   const budgetLimit = trip.budgetLimit ?? 0;
   const hasBudget = budgetLimit > 0;
-  const spentBudget =
-    propSpentBudget !== undefined
-      ? propSpentBudget
-      : sum(tripExpenses, trip.currency || 'USD');
-  const budgetPercent = hasBudget
-    ? Math.min(100, Math.round((spentBudget / budgetLimit) * 100))
-    : 0;
+  // Not capped at 100: a 140% overspend must read as 140%, not as a full bar.
+  const budgetPercent = getBudgetPercent(spentBudget, budgetLimit);
+  const budgetState = getBudgetState(spentBudget, budgetLimit);
 
-  const totalChecklist =
-    propTotalChecklistCount !== undefined
-      ? propTotalChecklistCount
-      : tripChecklists.length;
   const hasChecklist = totalChecklist > 0;
-  const packedCount =
-    propPackedCount !== undefined
-      ? propPackedCount
-      : tripChecklists.filter((c) => c.isCompleted).length;
   const packingPercent = hasChecklist
     ? Math.min(100, Math.round((packedCount / totalChecklist) * 100))
     : 0;
-
   return (
     <article
       className={`${styles.card} ${viewMode === 'list' ? styles.listMode : ''}`}
@@ -275,7 +254,14 @@ export const TripCard: React.FC<TripCardProps> = ({
                   </span>
                   <span className={`${styles.metricValue} tabular-nums`}>
                     {format(spentBudget, trip.currency)}{' '}
-                    <span style={{ color: 'var(--color-text-secondary)' }}>
+                    <span
+                      style={{
+                        color:
+                          budgetState === 'danger'
+                            ? 'var(--color-status-danger)'
+                            : 'var(--color-text-secondary)',
+                      }}
+                    >
                       {hasBudget
                         ? `/ ${format(budgetLimit, trip.currency)} (${budgetPercent}%)`
                         : '· no budget set'}
@@ -287,9 +273,9 @@ export const TripCard: React.FC<TripCardProps> = ({
                   variant={
                     !hasBudget
                       ? 'muted'
-                      : budgetPercent > 90
+                      : budgetState === 'danger'
                       ? 'danger'
-                      : budgetPercent > 60
+                      : budgetState === 'warning'
                       ? 'warning'
                       : 'success'
                   }

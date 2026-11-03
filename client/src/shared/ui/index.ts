@@ -10,3 +10,4 @@ export * from './DropdownMenu';
 export * from './Checkbox';
 export { ErrorBoundary, RouteErrorBoundary } from './ErrorBoundary';
 export * from './Toast';
+export { QueryErrorState } from './QueryErrorState/QueryErrorState';

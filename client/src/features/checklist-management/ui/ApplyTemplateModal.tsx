@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Dialog, Button, Badge } from '@shared/ui';
-import { CHECKLIST_TEMPLATES } from '../model/checklistTemplates';
+import { CHECKLIST_TEMPLATES } from '@features/checklist-management/model/checklistTemplates';
 import { Sparkles } from 'lucide-react';
 import styles from './ApplyTemplateModal.module.css';
 

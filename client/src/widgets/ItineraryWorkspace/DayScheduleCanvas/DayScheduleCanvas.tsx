@@ -140,6 +140,34 @@ export const DayScheduleCanvas: React.FC<DayScheduleCanvasProps> = ({
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          accessibility={{
+            announcements: {
+              onDragStart({ active }) {
+                const found = events.find((e) => e.id === active.id);
+                return `Picked up activity ${found?.title ?? active.id}. Use arrow keys to move, Space or Enter to drop.`;
+              },
+              onDragOver({ active, over }) {
+                const activeItem = events.find((e) => e.id === active.id);
+                if (over) {
+                  const overItem = events.find((e) => e.id === over.id);
+                  return `Activity ${activeItem?.title ?? active.id} is over position of ${overItem?.title ?? over.id}.`;
+                }
+                return `Activity ${activeItem?.title ?? active.id} is no longer over a droppable area.`;
+              },
+              onDragEnd({ active, over }) {
+                const activeItem = events.find((e) => e.id === active.id);
+                if (over) {
+                  const overItem = events.find((e) => e.id === over.id);
+                  return `Dropped activity ${activeItem?.title ?? active.id} at position of ${overItem?.title ?? over.id}.`;
+                }
+                return `Dropped activity ${activeItem?.title ?? active.id}.`;
+              },
+              onDragCancel({ active }) {
+                const activeItem = events.find((e) => e.id === active.id);
+                return `Cancelled reordering of ${activeItem?.title ?? active.id}.`;
+              },
+            },
+          }}
         >
           <SortableContext
             items={filteredEvents.map((e) => e.id)}

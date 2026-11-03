@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
   Share2,
@@ -15,6 +15,7 @@ import { Badge } from '@shared/ui';
 import type { Trip } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
 import { parseLocalDate } from '@shared/lib/date';
+import { getBudgetPercent, getBudgetState } from '@entities/expense';
 import { useGetExpensesByTripIdQuery, useGetChecklistsByTripIdQuery } from '@shared/api/apiSlice';
 import styles from './TripContextHeader.module.css';
 
@@ -31,7 +32,6 @@ export const TripContextHeader: React.FC<TripContextHeaderProps> = ({
   onAddActivity,
   onEditTrip,
 }) => {
-  const navigate = useNavigate();
   const { format, sum } = useCurrency();
   const [copied, setCopied] = useState(false);
 
@@ -68,7 +68,9 @@ export const TripContextHeader: React.FC<TripContextHeaderProps> = ({
   const spent = sum(tripExpenses, trip.currency || 'USD');
   const limit = trip.budgetLimit ?? 0;
   const hasBudget = limit > 0;
-  const budgetPercent = hasBudget ? Math.min(100, Math.round((spent / limit) * 100)) : 0;
+  // Not capped at 100 so an overspend stays visible (e.g. 140%)
+  const budgetPercent = getBudgetPercent(spent, limit);
+  const budgetState = getBudgetState(spent, limit);
 
   const totalChecklist = tripChecklists.length;
   const packed = tripChecklists.filter(c => c.isCompleted).length;
@@ -95,15 +97,11 @@ export const TripContextHeader: React.FC<TripContextHeaderProps> = ({
             <span>{copied ? 'Link Copied!' : 'Share Trip'}</span>
           </button>
 
-          <button
-            type="button"
-            className={styles.actionBtn}
-            onClick={() => navigate(`/trips/${trip.id}/checklists`)}
-          >
+          <Link to={`/trips/${trip.id}/checklists`} className={styles.actionBtn}>
             <CheckSquare size={16} />
             <span>Checklists</span>
             <span className={styles.indicatorDot} />
-          </button>
+          </Link>
 
           <button
             type="button"
@@ -184,10 +182,9 @@ export const TripContextHeader: React.FC<TripContextHeaderProps> = ({
         {/* Metrics & Add button */}
         <div className={styles.metricsGroup}>
           {/* Budget Widget */}
-          <div
+          <Link
             className={styles.metricBox}
-            onClick={() => navigate(`/trips/${trip.id}/budget`)}
-            style={{ cursor: 'pointer' }}
+            to={`/trips/${trip.id}/budget`}
             title="View budget & expenses"
           >
             <div className={styles.metricText}>
@@ -202,16 +199,24 @@ export const TripContextHeader: React.FC<TripContextHeaderProps> = ({
             <div className={styles.progressBarContainer}>
               <div
                 className={styles.progressBarFill}
-                style={{ width: `${budgetPercent}%` }}
+                style={{
+                  width: `${Math.min(100, budgetPercent)}%`,
+                  ...(budgetState === 'danger' ? { background: 'var(--color-status-danger)' } : {}),
+                  ...(budgetState === 'warning' ? { background: 'var(--color-category-dining)' } : {}),
+                }}
               />
             </div>
-          </div>
+            {hasBudget && budgetState === 'danger' && (
+              <span className={styles.metricTotal} role="status">
+                Over budget · {budgetPercent}% used
+              </span>
+            )}
+          </Link>
 
           {/* Checklist Quick Status */}
-          <div
+          <Link
             className={styles.metricBox}
-            onClick={() => navigate(`/trips/${trip.id}/checklists`)}
-            style={{ cursor: 'pointer' }}
+            to={`/trips/${trip.id}/checklists`}
             title="View checklist packing"
           >
             <div className={styles.metricText}>
@@ -232,7 +237,7 @@ export const TripContextHeader: React.FC<TripContextHeaderProps> = ({
                 }}
               />
             </div>
-          </div>
+          </Link>
 
           <button
             type="button"

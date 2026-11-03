@@ -9,6 +9,8 @@ import styles from './Header.module.css';
  * Props accepted by the `<Header />` component.
  */
 export interface HeaderProps {
+  /** Currently active trip ID in route params to preserve context across workspace tabs */
+  activeTripId?: string;
   /** Optional callback to trigger new trip creation */
   onPlanNewTrip?: () => void;
   /** Active search query string */
@@ -19,19 +21,18 @@ export interface HeaderProps {
 
 /**
  * Global Top Navigation Bar.
- *
- * Renders:
- * - Brand logo link to home dashboard.
- * - Global search bar with debounce-ready input bindings.
- * - Quick 'Plan New Trip' call to action button.
- * - User notification bell and user profile thumbnail.
  */
 export const Header: React.FC<HeaderProps> = ({
+  activeTripId,
   onPlanNewTrip,
   searchQuery = '',
   onSearchChange,
 }) => {
   const { toast } = useToast();
+  const itineraryPath = activeTripId ? `/trips/${activeTripId}` : '/itinerary';
+  const budgetPath = activeTripId ? `/trips/${activeTripId}/budget` : '/budget';
+  const checklistsPath = activeTripId ? `/trips/${activeTripId}/checklists` : '/checklists';
+
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
@@ -55,7 +56,8 @@ export const Header: React.FC<HeaderProps> = ({
               Trips
             </NavLink>
             <NavLink
-              to="/itinerary"
+              to={itineraryPath}
+              end
               className={({ isActive }) =>
                 `${styles.navLink} ${isActive ? styles.active : ''}`
               }
@@ -63,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
               Itinerary
             </NavLink>
             <NavLink
-              to="/budget"
+              to={budgetPath}
               className={({ isActive }) =>
                 `${styles.navLink} ${isActive ? styles.active : ''}`
               }
@@ -71,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
               Budget
             </NavLink>
             <NavLink
-              to="/checklists"
+              to={checklistsPath}
               className={({ isActive }) =>
                 `${styles.navLink} ${isActive ? styles.active : ''}`
               }

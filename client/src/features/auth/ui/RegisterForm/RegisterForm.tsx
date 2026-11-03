@@ -9,6 +9,7 @@ import { useRegisterMutation } from '@shared/api/apiSlice';
 import { useAppDispatch } from '@app/hooks';
 import { setCredentials } from '@entities/session';
 import styles from './RegisterForm.module.css';
+import { getErrorMessage } from '@shared/lib/errors';
 
 export const RegisterForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -51,9 +52,8 @@ export const RegisterForm: React.FC = () => {
       });
 
       navigate('/', { replace: true });
-    } catch (err: any) {
-      const message = err?.data?.message || err?.error || 'Registration failed. Please try again.';
-      setServerError(message);
+    } catch (err: unknown) {
+      setServerError(getErrorMessage(err, 'Registration failed. Please try again.'));
     }
   };
 

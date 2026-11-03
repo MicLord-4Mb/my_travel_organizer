@@ -4,14 +4,15 @@ import { apiSlice } from '@shared/api/apiSlice';
 
 import { devLogger } from '@app/middleware/devLogger';
 
-import { sessionReducer } from '@entities/session';
+import { sessionReducer, sessionListenerMiddleware } from '@entities/session';
 
 /**
  * Global Redux Store Configuration.
  *
  * Configures the centralized Redux state tree using Redux Toolkit.
  * - Integrates RTK Query `apiSlice` reducer and cache middleware.
- * - Integrates `sessionReducer` for authentication session and user state.
+ * - Integrates `sessionReducer` for authentication session and user state,
+ *   paired with `sessionListenerMiddleware` for side-effect-free storage persistence.
  * - In development mode: attaches `redux-logger` for detailed action debugging.
  * - In production mode: attaches `reduxProdErrorLogger` for silent monitoring and remote beacon forwarding.
  */
@@ -21,7 +22,9 @@ export const store = configureStore({
     session: sessionReducer,
   },
   middleware: (getDefaultMiddleware) => {
-    const baseMiddleware = getDefaultMiddleware().concat(apiSlice.middleware);
+    const baseMiddleware = getDefaultMiddleware()
+      .prepend(sessionListenerMiddleware.middleware)
+      .concat(apiSlice.middleware);
     if (import.meta.env.DEV && devLogger) {
       return baseMiddleware.concat(devLogger);
     }

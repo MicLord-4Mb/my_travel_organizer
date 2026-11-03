@@ -275,7 +275,7 @@ export const FinancialKpiTicker: React.FC<FinancialKpiTickerProps> = ({
               <div className={styles.valueRow}>
                 <span
                   className={styles.largeValue}
-                  style={isOverBudget ? { color: '#EF4444' } : undefined}
+                  style={isOverBudget ? { color: 'var(--color-status-danger)' } : undefined}
                 >
                   {format(convertedRemaining, displayCurrency)}
                 </span>
@@ -302,9 +302,9 @@ export const FinancialKpiTicker: React.FC<FinancialKpiTickerProps> = ({
           <div className={styles.allowanceBox}>
             <div className={styles.allowanceLeft}>
               {isOverBudget ? (
-                <AlertCircle size={16} color="#EF4444" />
+                <AlertCircle size={16} color="var(--color-status-danger)" />
               ) : (
-                <CheckCircle2 size={16} color="#10B981" />
+                <CheckCircle2 size={16} color="var(--color-status-success)" />
               )}
               <span>Remaining daily allowance:</span>
             </div>

@@ -15,10 +15,10 @@ const CATEGORY_CHIPS: Array<{
   dotColor?: string;
 }> = [
   { key: 'all', label: 'ALL' },
-  { key: 'food', label: 'FOOD', dotColor: '#F59E0B' },
-  { key: 'spots', label: 'SPOTS', dotColor: '#10B981' },
-  { key: 'transit', label: 'TRANSIT', dotColor: '#3B82F6' },
-  { key: 'lodging', label: 'LODGING', dotColor: '#8B5CF6' },
+  { key: 'food', label: 'FOOD', dotColor: 'var(--color-category-dining)' },
+  { key: 'spots', label: 'SPOTS', dotColor: 'var(--color-category-activities)' },
+  { key: 'transit', label: 'TRANSIT', dotColor: 'var(--color-category-transport)' },
+  { key: 'lodging', label: 'LODGING', dotColor: 'var(--color-category-lodging)' },
 ];
 
 export const TimelineFilters: React.FC<TimelineFiltersProps> = ({

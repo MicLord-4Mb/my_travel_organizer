@@ -1,8 +1,10 @@
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useId, useState } from 'react';
 import styles from './Input.module.css';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
+  labelIcon?: React.ReactNode;
+  labelRight?: React.ReactNode;
   helperText?: string;
   error?: string;
   leftIcon?: React.ReactNode;
@@ -14,6 +16,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     {
       label,
+      labelIcon,
+      labelRight,
       helperText,
       error,
       leftIcon,
@@ -25,12 +29,21 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       id,
       onFocus,
       onBlur,
+      'aria-describedby': ariaDescribedByProp,
+      'aria-invalid': ariaInvalidProp,
       ...props
     },
     ref
   ) => {
     const [isFocused, setIsFocused] = useState(false);
-    const inputId = id || (label ? `input-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined);
+    const generatedId = useId();
+    const inputId = id || generatedId;
+    const errorId = `${inputId}-error`;
+    const helperId = `${inputId}-helper`;
+    const describedBy =
+      [ariaDescribedByProp, error ? errorId : helperText ? helperId : undefined]
+        .filter(Boolean)
+        .join(' ') || undefined;
 
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
       setIsFocused(true);
@@ -44,11 +57,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className={`${styles.fieldWrapper} ${containerClassName || ''}`}>
-        {label && (
-          <label htmlFor={inputId} className={styles.label}>
-            {label}
-            {required && <span className={styles.required}>*</span>}
-          </label>
+        {(label || labelRight) && (
+          <div className={styles.labelRow}>
+            {label && (
+              <label htmlFor={inputId} className={styles.label}>
+                {labelIcon && <span className={styles.labelIcon}>{labelIcon}</span>}
+                <span>{label}</span>
+                {required && <span className={styles.required}>*</span>}
+              </label>
+            )}
+            {labelRight && <span className={styles.labelRight}>{labelRight}</span>}
+          </div>
         )}
 
         <div
@@ -67,6 +86,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             disabled={disabled}
             required={required}
+            aria-invalid={ariaInvalidProp ?? (error ? true : undefined)}
+            aria-describedby={describedBy}
             onFocus={handleFocus}
             onBlur={handleBlur}
             className={[
@@ -83,11 +104,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         </div>
 
         {error ? (
-          <span className={styles.errorText} role="alert">
+          <span id={errorId} className={styles.errorText} role="alert">
             {error}
           </span>
         ) : helperText ? (
-          <span className={styles.helperText}>{helperText}</span>
+          <span id={helperId} className={styles.helperText}>
+            {helperText}
+          </span>
         ) : null}
       </div>
     );

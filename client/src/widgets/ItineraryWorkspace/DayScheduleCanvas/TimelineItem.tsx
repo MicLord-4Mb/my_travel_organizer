@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import type { PlaceEvent, EventCategory } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
-import { formatTimeWithPeriod } from '../lib/itineraryUtils';
+import { formatTimeWithPeriod } from '@entities/itinerary';
 import styles from './TimelineItem.module.css';
 
 export interface TimelineItemProps {
@@ -30,23 +30,23 @@ const CATEGORY_CONFIG: Record<
 > = {
   dining: {
     label: 'DINING',
-    color: '#F59E0B',
-    bg: 'rgba(245, 158, 11, 0.12)',
+    color: 'var(--color-category-dining)',
+    bg: 'var(--color-category-dining-bg)',
   },
   activities: {
     label: 'ACTIVITY',
-    color: '#10B981',
-    bg: 'rgba(16, 185, 129, 0.12)',
+    color: 'var(--color-category-activities)',
+    bg: 'var(--color-category-activities-bg)',
   },
   transport: {
     label: 'TRANSIT',
-    color: '#3B82F6',
-    bg: 'rgba(59, 130, 246, 0.12)',
+    color: 'var(--color-category-transport)',
+    bg: 'var(--color-category-transport-bg)',
   },
   lodging: {
     label: 'LODGING',
-    color: '#8B5CF6',
-    bg: 'rgba(139, 92, 246, 0.12)',
+    color: 'var(--color-category-lodging)',
+    bg: 'var(--color-category-lodging-bg)',
   },
 };
 
@@ -67,28 +67,39 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
     transform,
     transition,
     isDragging,
+    isOver,
   } = useSortable({
     id: isOverlay ? `overlay-${event.id}` : event.id,
-    disabled: isDragDisabled || isOverlay
+    disabled: isDragDisabled || isOverlay,
   });
 
   const style: React.CSSProperties | undefined = isOverlay
     ? undefined
     : {
-    transform: CSS.Translate.toString(transform),
-    transition,
-    };
+        transform: CSS.Translate.toString(transform),
+        transition,
+      };
 
   const catKey = (event.category || 'activities') as EventCategory;
   const cat = CATEGORY_CONFIG[catKey] || CATEGORY_CONFIG.activities;
   const timeFormatted = formatTimeWithPeriod(event.startTime);
+
+  const handleCardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onSelect?.();
+    }
+  };
 
   return (
     <div
       ref={isOverlay ? undefined : setNodeRef}
       style={style}
       className={`${styles.timelineRow} ${
-        isDragging ?? !isOverlay ? styles.timelineRowDragging : ''
+        isDragging && !isOverlay ? styles.timelineRowDragging : ''
+      } ${isOverlay ? styles.timelineRowOverlay : ''} ${
+        isOver && !isDragging && !isOverlay ? styles.timelineRowDropTarget : ''
       }`}
     >
       {/* Node Timestamp */}
@@ -100,12 +111,17 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
         <div className={styles.coloredDot} style={{ background: cat.color }} />
       </div>
 
-      {/* Main Card */}
+      {/* Main Card (role="button" + tabIndex so nested <button> controls stay valid HTML) */}
       <div
+        role="button"
+        tabIndex={0}
+        aria-pressed={Boolean(isSelected)}
+        aria-label={`Select stop ${event.title}`}
         className={`${styles.cardContainer} ${
           isSelected ? styles.cardSelected : ''
         }`}
         onClick={onSelect}
+        onKeyDown={handleCardKeyDown}
       >
         <div
           className={styles.categoryStripe}
@@ -140,7 +156,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
               </h3>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className={styles.headerRight}>
               {event.cost != null && event.cost > 0 ? (
                 <span className={styles.costTag}>
                   {format(event.cost, event.currency || 'USD')}
@@ -160,6 +176,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
                     className={styles.actionIconBtn}
                     onClick={onEdit}
                     title="Edit stop"
+                    aria-label={`Edit ${event.title}`}
                   >
                     <Edit2 size={14} />
                   </button>
@@ -170,6 +187,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
                     className={`${styles.actionIconBtn} ${styles.actionIconBtnDanger}`}
                     onClick={onDelete}
                     title="Delete stop"
+                    aria-label={`Delete ${event.title}`}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -197,7 +215,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
             {event.notes && (
               <span className={styles.metaItem} title={event.notes}>
                 <Info size={14} />
-                <span style={{ maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span className={styles.notesEllipsis}>
                   {event.notes}
                 </span>
               </span>

@@ -54,6 +54,39 @@ export interface BudgetAnalytics {
 }
 
 /**
+ * Visual / semantic state of a budget relative to its limit.
+ * - `normal`: below 90% of the limit (or no limit configured)
+ * - `warning`: between 90% and 100% (inclusive)
+ * - `danger`: over budget (> 100%)
+ */
+export type BudgetState = 'normal' | 'warning' | 'danger';
+
+/** Ratio at which a budget switches from `normal` to `warning`. */
+export const BUDGET_WARNING_RATIO = 0.9;
+
+/**
+ * Single source of truth for budget threshold classification.
+ *
+ * @param spent - Amount spent, in the same currency as `limit`.
+ * @param limit - Budget limit; `undefined`, `0` or negative means "no limit" (always `normal`).
+ */
+export function getBudgetState(spent: number, limit?: number | null): BudgetState {
+  if (!limit || limit <= 0) return 'normal';
+  const ratio = spent / limit;
+  if (ratio > 1) return 'danger';
+  if (ratio >= BUDGET_WARNING_RATIO) return 'warning';
+  return 'normal';
+}
+
+/**
+ * Rounded budget utilization percentage. Intentionally **not** capped at 100 so that
+ * deficits remain visible (e.g. `140`). Returns 0 when no limit is configured.
+ */
+export function getBudgetPercent(spent: number, limit?: number | null): number {
+  if (!limit || limit <= 0) return 0;
+  return Math.round((spent / limit) * 100);
+}
+/**
  * Computes comprehensive financial analytics and timeline burn rates for a trip.
  *
  * Converts each expense into the trip's base currency using live API exchange rates (if supplied),
@@ -88,6 +121,7 @@ export function computeBudgetAnalytics(
     categoryTotals[normalizeCategory(expense.category)] += amount;
   }
 
+  const budgetState = getBudgetState(totalSpent, approvedLimit);
   const remaining = approvedLimit - totalSpent;
   const spentPercent = approvedLimit > 0 ? (totalSpent / approvedLimit) * 100 : 0;
   const remainingPercent = approvedLimit > 0 ? (remaining / approvedLimit) * 100 : 0;
@@ -129,8 +163,8 @@ export function computeBudgetAnalytics(
     remainingDays,
     dailyAvg,
     remainingDailyAllowance,
-    isNearLimit: spentPercent >= 90 && spentPercent <= 100,
-    isOverBudget: approvedLimit > 0 && totalSpent > approvedLimit,
+    isNearLimit: budgetState === 'warning',
+    isOverBudget: budgetState === 'danger',
     transactionCount: expenses.length,
   };
 }

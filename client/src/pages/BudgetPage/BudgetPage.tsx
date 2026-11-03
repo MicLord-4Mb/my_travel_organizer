@@ -21,7 +21,7 @@ import {
   TransactionsLedger,
 } from '@widgets/BudgetTracker';
 import { ExpenseModal, type ExpenseFormData } from '@features/expense-management';
-import { useToast } from '@shared/ui';
+import { Button, useToast, QueryErrorState } from '@shared/ui';
 import { useCurrency } from '@shared/lib/useCurrency';
 import type { Expense, EntityId } from '@shared/types/models';
 import { Wallet } from 'lucide-react';
@@ -33,7 +33,12 @@ export const BudgetPage: React.FC = () => {
   const { toast } = useToast();
   const { currencies, rates, baseCurrency, convert } = useCurrency();
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
-  const { activeTrip, status: tripStatus, allTrips: trips } = useActiveTrip(selectedTripId);
+  const {
+    activeTrip,
+    status: tripStatus,
+    allTrips: trips,
+    refetch: refetchTrips,
+  } = useActiveTrip(selectedTripId);
 
   // Local state for filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -138,7 +143,8 @@ export const BudgetPage: React.FC = () => {
   // Delete expense
   const handleDeleteExpense = async (expenseId: EntityId) => {
     try {
-      await deleteExpense(String(expenseId)).unwrap();
+      if (!activeTripId) return;
+      await deleteExpense({ id: String(expenseId), tripId: activeTripId }).unwrap();
       toast({
         title: 'Deleted',
         description: 'Expense successfully deleted',
@@ -160,6 +166,7 @@ export const BudgetPage: React.FC = () => {
     if (expenseToEdit) {
       await updateExpense({
         id: expenseToEdit.id,
+        tripId: activeTrip.id,
         payload: {
           title: data.title,
           amount: data.amount,
@@ -191,10 +198,18 @@ export const BudgetPage: React.FC = () => {
   if (tripStatus === 'loading') {
     return (
       <div className={styles.pageContainer}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', gap: '1rem' }}>
-          <div style={{ width: 32, height: 32, border: '3px solid var(--color-border-subtle)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-          <span style={{ color: 'var(--color-text-secondary)', fontSize: '14px' }}>Loading budget workspace...</span>
+        <div className={styles.loadingState}>
+          <div className={styles.spinner} />
+          <span>Loading budget workspace...</span>
         </div>
+      </div>
+    );
+  }
+
+  if (tripStatus === 'error') {
+    return (
+      <div className={styles.pageContainer}>
+        <QueryErrorState title="Could not load your budget" onRetry={refetchTrips} />
       </div>
     );
   }
@@ -208,9 +223,9 @@ export const BudgetPage: React.FC = () => {
           </div>
           <h2 className={styles.emptyTitle}>404 - Trip Not Found</h2>
           <p>The trip you are looking for does not exist.</p>
-          <button onClick={() => navigate('/')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          <Button variant="primary" onClick={() => navigate('/')}>
             Back to Trips
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -225,9 +240,9 @@ export const BudgetPage: React.FC = () => {
           </div>
           <h2 className={styles.emptyTitle}>No Trip Selected</h2>
           <p>Please select a trip or plan a new one to track your budget.</p>
-          <button onClick={() => navigate('/')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          <Button variant="primary" onClick={() => navigate('/')}>
             Go to Overview
-          </button>
+          </Button>
         </div>
       </div>
     );

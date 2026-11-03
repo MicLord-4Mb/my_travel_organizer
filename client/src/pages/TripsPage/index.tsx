@@ -7,21 +7,22 @@ import {
   useGetChecklistsQuery,
   useCreateTripMutation,
   useUpdateTripMutation,
-  useDeleteTripMutation,
 } from '@shared/api/apiSlice';
 import type { Trip, Expense, ChecklistItem } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
-import { TripFormModal, type TripFormData } from '@features/trip-management';
-import { KpiTicker } from './components/KpiTicker/KpiTicker';
 import {
-  TripFilters,
-  type FilterStatus,
-  type SortOption,
-  type ViewMode,
-} from './components/TripFilters/TripFilters';
+  TripFormModal,
+  toTripPayload,
+  useDuplicateTrip,
+  useDeleteTrip,
+  type TripFormData,
+} from '@features/trip-management';
+import { KpiTicker } from './components/KpiTicker/KpiTicker';
+import { TripFilters } from './components/TripFilters/TripFilters';
+import { useCatalogParams } from './model/useCatalogParams';
 import { TripCard } from '@entities/trip';
 import { EmptyState } from './components/EmptyState/EmptyState';
-import { useToast, ConfirmDialog } from '@shared/ui';
+import { useToast, ConfirmDialog, QueryErrorState } from '@shared/ui';
 import styles from './TripsPage.module.css';
 
 /** Base currency used for normalizing dashboard-wide KPI metrics and aggregates. */
@@ -32,44 +33,64 @@ const REPORTING_CURRENCY = 'USD';
  *
  * Serves as the primary landing dashboard in WanderFlow:
  * - Aggregates high-level KPIs (active trips, total spent budget, upcoming flights).
- * - Provides search, status filtering ('all', 'planned', 'in_progress', 'completed'), and sorting.
+ * - Provides search, status filtering ('all', 'upcoming', 'active', 'past'), and sorting.
  * - Supports grid vs compact table view switching.
  * - Orchestrates trip creation and editing dialogs.
- * - Responds to global URL search parameters (`?new=1`, `?q=search`).
+ * - Keeps filter / sort / view / search state in the URL (`?status=&sort=&view=&q=`),
+ *   and responds to `?new=1` to open the creation dialog.
+ *
+ * Trip status is derived from calendar dates by the API layer; duplication and deletion
+ * orchestration lives in `@features/trip-management` hooks.
  */
 export const TripsPage: React.FC = () => {
   const { toast } = useToast();
   const { sum, baseCurrency } = useCurrency();
   const reportingCurrency = baseCurrency || REPORTING_CURRENCY;
-  const { data: trips = [], isLoading, isFetching } = useGetTripsQuery();
-  const { data: allExpenses = [] } = useGetExpensesQuery();
-  const { data: allChecklists = [] } = useGetChecklistsQuery();
+  const {
+    data: trips = [],
+    isLoading,
+    isFetching,
+    isError: isTripsError,
+    refetch: refetchTrips,
+  } = useGetTripsQuery();
+  const {
+    data: allExpenses = [],
+    isError: isExpensesError,
+    refetch: refetchExpenses,
+  } = useGetExpensesQuery();
+  const {
+    data: allChecklists = [],
+    isError: isChecklistsError,
+    refetch: refetchChecklists,
+  } = useGetChecklistsQuery();
   const [createTrip] = useCreateTripMutation();
   const [updateTrip] = useUpdateTripMutation();
-  const [deleteTrip] = useDeleteTripMutation();
+  const duplicateTrip = useDuplicateTrip();
+  const { deleteTrip, isDeleting: isDeletingTrip } = useDeleteTrip();
 
-  const status = isLoading || isFetching ? 'loading' : 'succeeded';
+  const isLoadingTrips = isLoading || (isFetching && trips.length === 0);
+  const isMetricsError = isExpensesError || isChecklistsError;
 
-  // Filter & Control States
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
-  const [sortBy, setSortBy] = useState<SortOption>('soonest');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-
-  // Router Search Parameters
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  // Search query derived directly from router query params without useEffect
-  const searchQuery = searchParams.get('q') || '';
-
-  const handleSearchChange = (q: string) => {
-    const nextParams = new URLSearchParams(searchParams);
-    if (q) {
-      nextParams.set('q', q);
-    } else {
-      nextParams.delete('q');
-    }
-    setSearchParams(nextParams, { replace: true });
+  const retryAll = () => {
+    if (isTripsError) refetchTrips();
+    if (isExpensesError) refetchExpenses();
+    if (isChecklistsError) refetchChecklists();
   };
+
+  // Filter & control state lives in the URL so it survives navigation and reloads
+  const {
+    filterStatus,
+    sortBy,
+    viewMode,
+    searchQuery,
+    setFilterStatus,
+    setSortBy,
+    setViewMode,
+    setSearchQuery,
+  } = useCatalogParams();
+
+  // Router Search Parameters (`?new=1` opens the creation modal)
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Modal State: open if manually triggered or URL requests ?new=1
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -90,7 +111,7 @@ export const TripsPage: React.FC = () => {
     }
   };
 
-  // Compute status counts for filter tabs
+  // Compute status counts for filter tabs (status is calendar-derived)
   const counts = useMemo(() => {
     return {
       all: trips.length,
@@ -143,9 +164,7 @@ export const TripsPage: React.FC = () => {
 
     const spentBudget = sum(validExpenses, reportingCurrency);
     const totalBudget = sum(
-      trips.map((t) => (
-        { amount: t.budgetLimit, currency: t.currency }
-      )),
+      trips.map((t) => ({ amount: t.budgetLimit, currency: t.currency })),
       reportingCurrency
     );
 
@@ -167,7 +186,7 @@ export const TripsPage: React.FC = () => {
   const filteredAndSortedTrips = useMemo(() => {
     return trips
       .filter((trip) => {
-        // Status filter
+        // Status filter (derived calendar status)
         if (filterStatus === 'upcoming' && trip.status !== 'planned') return false;
         if (filterStatus === 'active' && trip.status !== 'in_progress') return false;
         if (
@@ -213,34 +232,25 @@ export const TripsPage: React.FC = () => {
   };
 
   const handleDuplicateTrip = async (tripId: string) => {
+    const tripToDup = trips.find((t) => t.id === tripId);
+    if (!tripToDup) return;
     try {
-      const tripToDup = trips.find((t) => t.id === tripId);
-      if (tripToDup) {
-        const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = tripToDup;
-        await createTrip({
-          ...rest,
-          title: `${rest.title} (Copy)`,
-          spentBudget: 0,
-          packedCount: 0,
-          totalChecklistCount: 0,
-        }).unwrap();
-        toast({
-          title: 'Success',
-          description: 'Trip duplicated successfully',
-          variant: 'success'
-        });
-      }
+      await duplicateTrip(tripToDup);
+      toast({
+        title: 'Success',
+        description: 'Trip, itinerary and checklist duplicated successfully',
+        variant: 'success',
+      });
     } catch (err) {
       toast({
         title: 'Error',
         description: err instanceof Error ? err.message : 'Failed to duplicate trip',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
 
   const [tripToDeleteId, setTripToDeleteId] = useState<string | null>(null);
-  const [isDeletingTrip, setIsDeletingTrip] = useState(false);
 
   const handleDeleteTrip = (tripId: string) => {
     setTripToDeleteId(tripId);
@@ -249,42 +259,28 @@ export const TripsPage: React.FC = () => {
   const handleConfirmDeleteTrip = async () => {
     if (!tripToDeleteId) return;
     try {
-      setIsDeletingTrip(true);
-      await deleteTrip(tripToDeleteId).unwrap();
+      await deleteTrip(tripToDeleteId);
       toast({
         title: 'Deleted',
         description: 'Trip deleted successfully',
-        variant: 'success'
+        variant: 'success',
       });
       setTripToDeleteId(null);
     } catch (err) {
       toast({
         title: 'Error',
         description: err instanceof Error ? err.message : 'Failed to delete trip',
-        variant: 'destructive'
+        variant: 'destructive',
       });
-    } finally {
-      setIsDeletingTrip(false);
     }
   };
 
   const handleFormSubmit = async (formData: TripFormData) => {
+    const payload = toTripPayload(formData);
     if (tripToEdit) {
-      await updateTrip({
-        id: tripToEdit.id,
-        payload: {
-          ...formData,
-          budgetLimit: formData.budgetLimit || 0,
-        },
-      }).unwrap();
+      await updateTrip({ id: tripToEdit.id, payload }).unwrap();
     } else {
-      await createTrip({
-        ...formData,
-        budgetLimit: formData.budgetLimit || 0,
-        spentBudget: 0,
-        packedCount: 0,
-        totalChecklistCount: 0,
-      }).unwrap();
+      await createTrip(payload).unwrap();
     }
   };
 
@@ -306,7 +302,7 @@ export const TripsPage: React.FC = () => {
           currentStatus={filterStatus}
           onStatusChange={setFilterStatus}
           searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
+          onSearchChange={setSearchQuery}
           sortBy={sortBy}
           onSortChange={setSortBy}
           viewMode={viewMode}
@@ -314,12 +310,26 @@ export const TripsPage: React.FC = () => {
           counts={counts}
         />
 
-        {/* Trips Display Grid or Empty State */}
-        {status === 'loading' && trips.length === 0 ? (
+        {/* Partial failure: trips are shown, but card metrics may be incomplete */}
+        {isMetricsError && !isTripsError && (
+          <QueryErrorState
+            title="Some trip metrics could not be loaded"
+            description="Spending and checklist numbers on the cards may be incomplete."
+            onRetry={retryAll}
+          />
+        )}
+
+        {/* Trips Display Grid, Error State or Empty State */}
+        {isLoadingTrips ? (
           <div className={styles.loadingContainer}>
             <div className={styles.spinner} />
             <p>Loading your journeys...</p>
           </div>
+        ) : isTripsError && trips.length === 0 ? (
+          <QueryErrorState
+            title="Could not load your trips"
+            onRetry={retryAll}
+          />
         ) : filteredAndSortedTrips.length > 0 ? (
           <div
             className={viewMode === 'grid' ? styles.tripsGrid : styles.tripsList}
@@ -370,7 +380,7 @@ export const TripsPage: React.FC = () => {
             onImportItinerary={() => {
               toast({
                 title: 'Coming Soon',
-                description: 'Itinerary import (.ics / JSON) feature is coming soon!'
+                description: 'Itinerary import (.ics / JSON) feature is coming soon!',
               });
             }}
             title="Planning a new destination?"

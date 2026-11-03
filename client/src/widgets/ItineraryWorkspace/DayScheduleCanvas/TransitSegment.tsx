@@ -1,7 +1,7 @@
 import React from 'react';
 import { Footprints, Train } from 'lucide-react';
 import type { PlaceEvent } from '@shared/types/models';
-import { getCoordinatesDistanceKm } from '../lib/itineraryUtils';
+import { getCoordinatesDistanceKm } from '@entities/itinerary';
 import styles from './TransitSegment.module.css';
 
 export interface TransitSegmentProps {

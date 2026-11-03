@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ListPlus, Plus } from 'lucide-react';
 import { Button } from '@shared/ui';
+import { CHECKLIST_CATEGORIES_BY_TYPE } from '@entities/checklist';
 import type { ChecklistCategory, ChecklistPriority, ChecklistType } from '@shared/types/models';
 import styles from './QuickEntryBar.module.css';
 
@@ -16,8 +17,17 @@ export interface QuickEntryBarProps {
 export const QuickEntryBar: React.FC<QuickEntryBarProps> = ({ onAddItem }) => {
   const [title, setTitle] = useState('');
   const [type, setType] = useState<ChecklistType>('pretrip');
+  const [category, setCategory] = useState<ChecklistCategory>('documents');
   const [priority, setPriority] = useState<ChecklistPriority>('normal');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleTypeChange = (nextType: ChecklistType) => {
+    setType(nextType);
+    const allowed = CHECKLIST_CATEGORIES_BY_TYPE[nextType];
+    if (!allowed.some((c) => c.value === category)) {
+      setCategory(allowed[0].value);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +36,6 @@ export const QuickEntryBar: React.FC<QuickEntryBarProps> = ({ onAddItem }) => {
 
     setIsSubmitting(true);
     try {
-      const category: ChecklistCategory = type === 'pretrip' ? 'documents' : 'gear';
       await onAddItem({
         title: trimmed,
         type,
@@ -60,12 +69,25 @@ export const QuickEntryBar: React.FC<QuickEntryBarProps> = ({ onAddItem }) => {
           <div className={styles.controls}>
             <select
               value={type}
-              onChange={(e) => setType(e.target.value as ChecklistType)}
+              onChange={(e) => handleTypeChange(e.target.value as ChecklistType)}
               className={styles.select}
               aria-label="Section"
             >
               <option value="pretrip">Pre-Trip Tasks</option>
               <option value="luggage">Luggage Inventory</option>
+            </select>
+
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as ChecklistCategory)}
+              className={styles.select}
+              aria-label="Category"
+            >
+              {CHECKLIST_CATEGORIES_BY_TYPE[type].map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
 
             <select
