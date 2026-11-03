@@ -39,6 +39,7 @@
 }
 
 .actionBtn {
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -155,6 +156,9 @@
 }
 
 .metricBox {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: var(--space-md);

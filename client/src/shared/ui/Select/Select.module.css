@@ -5,11 +5,32 @@
   width: 100%;
 }
 
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
 .label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-family-base);
   font-size: var(--font-size-caption);
   font-weight: 500;
   color: var(--color-text-primary);
+}
+
+.labelIcon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+}
+
+.labelRight {
+  display: inline-flex;
+  align-items: center;
 }
 
 .required {

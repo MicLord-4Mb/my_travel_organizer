@@ -1,13 +1,5 @@
 import {parseLocalDate} from "@shared/lib/date";
 import { z } from 'zod';
-import { TRIP_STATUS_OPTIONS } from '@entities/trip';
-
-type TripStatusValue = (typeof TRIP_STATUS_OPTIONS)[number]['value'];
-const statuses = TRIP_STATUS_OPTIONS.map((o) => o.value) as [
-  TripStatusValue,
-  ...TripStatusValue[]
-];
-
 
 /**
  * Validation schema for Trip creation and edit forms.
@@ -36,8 +28,11 @@ export const tripSchema = z
     startDate: z.string().min(1, 'Start date is required'),
     /** Trip end date in YYYY-MM-DD format */
     endDate: z.string().min(1, 'End date is required'),
-    /** Current trip lifecycle status */
-    status: z.enum(statuses),
+    /**
+     * Manual cancellation override. The remaining lifecycle status is always derived
+     * from the trip dates and is therefore not part of the form.
+     */
+    isCancelled: z.boolean().optional(),
     /** Optional financial budget limit in base currency */
     budgetLimit: z.preprocess((val) => {
       if (val === '' || val === null || val === undefined || (typeof val === 'number' && isNaN(val))) return undefined;

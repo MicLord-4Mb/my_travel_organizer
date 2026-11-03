@@ -44,10 +44,18 @@
   --color-category-dining-bg: rgba(245, 158, 11, 0.1);
   --color-category-dining-text: #D97706;
 
+  --color-category-shopping: #EC4899;
+  --color-category-shopping-bg: rgba(236, 72, 153, 0.1);
+
+  --color-category-other: #64748B;
+  --color-category-other-bg: rgba(100, 116, 139, 0.1);
+
   /* Status Colors */
   --color-status-danger: #EF4444;
   --color-status-danger-hover: #DC2626;
   --color-status-danger-bg: rgba(239, 68, 68, 0.1);
+  --color-status-warning: #F59E0B;
+  --color-status-warning-bg: rgba(245, 158, 11, 0.1);
   --color-status-success: #10B981;
   --color-status-success-bg: rgba(16, 185, 129, 0.1);
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useId } from 'react';
+import React, { useEffect, useId, useMemo } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
@@ -14,12 +14,12 @@ import {
   Bookmark,
   Calendar,
 } from 'lucide-react';
-import { Dialog, Button, useToast } from '@shared/ui';
+import { Dialog, Button, Input, Select, useToast } from '@shared/ui';
 import type { PlaceEvent, EventCategory } from '@shared/types/models';
 import {
   placeEventSchema,
   type PlaceEventFormData,
-} from '../model/placeEventSchema';
+} from '@features/itinerary-management/model/placeEventSchema';
 import { parseLocalDate, addDaysLocalDate, formatLocalDate } from '@shared/lib/date';
 import { useCurrency } from '@shared/lib/useCurrency';
 import styles from './PlaceEventModal.module.css';
@@ -52,33 +52,28 @@ const CATEGORIES: Array<{
   key: EventCategory;
   label: string;
   icon: React.ReactNode;
-  color: string;
 }> = [
-    {
-      key: 'dining',
-      label: 'Food & Dining',
-      icon: <Utensils size={18} color="#F59E0B" />,
-      color: '#F59E0B',
-    },
-    {
-      key: 'activities',
-      label: 'Spot / Activity',
-      icon: <Ticket size={18} color="#10B981" />,
-      color: '#10B981',
-    },
-    {
-      key: 'transport',
-      label: 'Transit / Move',
-      icon: <Train size={18} color="#3B82F6" />,
-      color: '#3B82F6',
-    },
-    {
-      key: 'lodging',
-      label: 'Lodging / Stay',
-      icon: <Hotel size={18} color="#8B5CF6" />,
-      color: '#8B5CF6',
-    },
-  ];
+  {
+    key: 'dining',
+    label: 'Food & Dining',
+    icon: <Utensils size={18} color="var(--color-category-dining)" />,
+  },
+  {
+    key: 'activities',
+    label: 'Spot / Activity',
+    icon: <Ticket size={18} color="var(--color-category-activities)" />,
+  },
+  {
+    key: 'transport',
+    label: 'Transit / Move',
+    icon: <Train size={18} color="var(--color-category-transport)" />,
+  },
+  {
+    key: 'lodging',
+    label: 'Lodging / Stay',
+    icon: <Hotel size={18} color="var(--color-category-lodging)" />,
+  },
+];
 
 /**
  * Modal dialog for scheduling an itinerary event or activity stop.
@@ -86,7 +81,8 @@ const CATEGORIES: Array<{
  * Provides:
  * - Category selector with specialized icons.
  * - Day assignment dropdown based on total trip calendar days.
- * - Time range inputs with start/end precedence checks.
+ * - Time range inputs with start/end validation.
+ * - Shared `<Input />` and `<Select />` primitives with automatic `aria-describedby` / `aria-invalid`.
  * - Location, GPS coordinate, cost, and booking reference fields.
  */
 export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
@@ -102,18 +98,10 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
 }) => {
   const { toast } = useToast();
   const { currencies } = useCurrency();
-  const titleId = useId();
-  const dayIndexId = useId();
-  const startTimeId = useId();
-  const endTimeId = useId();
-  const costId = useId();
-  const currencyId = useId();
-  const locationNameId = useId();
-  const addressId = useId();
-  const latId = useId();
-  const lngId = useId();
-  const bookingRefId = useId();
   const notesId = useId();
+  const notesErrorId = `${notesId}-error`;
+  const categoryGroupId = useId();
+  const categoryErrorId = `${categoryGroupId}-error`;
 
   const {
     register,
@@ -188,28 +176,36 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
       toast({
         title: 'Success',
         description: eventToEdit ? 'Event updated' : 'Event added',
-        variant: 'success'
+        variant: 'success',
       });
     } catch (err) {
       toast({
         title: 'Error',
         description: err instanceof Error ? err.message : 'Failed to save event',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
 
-  const getDayLabel = (idx: number) => {
-    if (!startDate) return `Day ${idx + 1}`;
-    const start = parseLocalDate(startDate);
-    if (!start) return `Day ${idx + 1}`;
-    const d = addDaysLocalDate(start, idx);
-    const formatted = formatLocalDate(d, {
-      month: 'short',
-      day: 'numeric',
+  const dayOptions = useMemo(() => {
+    const start = startDate ? parseLocalDate(startDate) : null;
+    return Array.from({ length: Math.max(totalDays, 1) }, (_, idx) => {
+      if (!start) return { value: idx, label: `Day ${idx + 1}` };
+      const d = addDaysLocalDate(start, idx);
+      const formatted = formatLocalDate(d, { month: 'short', day: 'numeric' });
+      return { value: idx, label: `Day ${idx + 1} (${formatted})` };
     });
-    return `Day ${idx + 1} (${formatted})`;
-  };
+  }, [startDate, totalDays]);
+
+  const currencyOptions = useMemo(() => {
+    if (currencies.length > 0) {
+      return currencies.map((c) => ({
+        value: c.code,
+        label: `${c.code} (${c.symbol})`,
+      }));
+    }
+    return [{ value: tripCurrency, label: tripCurrency }];
+  }, [currencies, tripCurrency]);
 
   return (
     <Dialog
@@ -218,24 +214,29 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
       title={eventToEdit ? 'Edit Itinerary Stop' : 'Add Stop / Activity'}
       description="Plan and structure your trip timeline with timing, costs, and locations."
     >
-      <form onSubmit={handleSubmit(onFormSubmit)} className={styles.form}>
+      <form noValidate onSubmit={handleSubmit(onFormSubmit)} className={styles.form}>
         {/* Category Selector */}
         <div className={styles.categoryGroup}>
-          <label className={styles.categoryLabel}>Activity Category</label>
-          <div className={styles.categoryGrid}>
+          <span id={categoryGroupId} className={styles.categoryLabel}>
+            Activity Category
+          </span>
+          <div
+            className={styles.categoryGrid}
+            role="radiogroup"
+            aria-labelledby={categoryGroupId}
+            aria-describedby={errors.category ? categoryErrorId : undefined}
+          >
             {CATEGORIES.map((cat) => {
               const isSelected = selectedCategory === cat.key;
               return (
                 <button
                   key={cat.key}
                   type="button"
-                  className={`${styles.categoryBtn} ${isSelected ? styles.categoryBtnActive : ''
-                    }`}
-                  style={{
-                    color: isSelected ? cat.color : undefined,
-                    borderColor: isSelected ? cat.color : undefined,
-                  }}
-                  onClick={() => setValue('category', cat.key)}
+                  role="radio"
+                  aria-checked={isSelected}
+                  data-cat={cat.key}
+                  className={`${styles.categoryBtn} ${isSelected ? styles.categoryBtnActive : ''}`}
+                  onClick={() => setValue('category', cat.key, { shouldValidate: true })}
                 >
                   {cat.icon}
                   <span>{cat.label}</span>
@@ -244,203 +245,134 @@ export const PlaceEventModal: React.FC<PlaceEventModalProps> = ({
             })}
           </div>
           {errors.category && (
-            <span className={styles.errorText}>{errors.category.message}</span>
+            <span id={categoryErrorId} className={styles.errorText} role="alert">
+              {errors.category.message}
+            </span>
           )}
         </div>
 
         {/* Title */}
-        <div className={styles.field}>
-          <label htmlFor={titleId} className={styles.label}>
-            <span>Activity / Place Name</span>
-            <span className={styles.required}>*</span>
-          </label>
-          <input
-            id={titleId}
-            type="text"
-            placeholder="e.g. Breakfast at Bills Omotesando"
-            className={`${styles.input} ${errors.title ? styles.inputError : ''}`}
-            {...register('title')}
-          />
-          {errors.title && (
-            <span className={styles.errorText}>{errors.title.message}</span>
-          )}
-        </div>
+        <Input
+          label="Activity / Place Name"
+          required
+          placeholder="e.g. Breakfast at Bills Omotesando"
+          error={errors.title?.message}
+          {...register('title')}
+        />
 
         {/* Day, Start Time, End Time */}
         <div className={styles.rowThree}>
-          <div className={styles.field}>
-            <label htmlFor={dayIndexId} className={styles.label}>
-              <Calendar size={14} />
-              <span>Assigned Day</span>
-            </label>
-            <select id={dayIndexId} className={styles.select} {...register('dayIndex')}>
-              {Array.from({ length: Math.max(totalDays, 1) }, (_, i) => (
-                <option key={i} value={i}>
-                  {getDayLabel(i)}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Assigned Day"
+            labelIcon={<Calendar size={14} />}
+            options={dayOptions}
+            error={errors.dayIndex?.message}
+            {...register('dayIndex')}
+          />
 
-          <div className={styles.field}>
-            <label htmlFor={startTimeId} className={styles.label}>
-              <Clock size={14} />
-              <span>Start Time</span>
-            </label>
-            <input
-              id={startTimeId}
-              type="time"
-              className={`${styles.input} ${errors.startTime ? styles.inputError : ''
-                }`}
-              {...register('startTime')}
-            />
-            {errors.startTime && (
-              <span className={styles.errorText}>{errors.startTime.message}</span>
-            )}
-          </div>
+          <Input
+            label="Start Time"
+            labelIcon={<Clock size={14} />}
+            type="time"
+            error={errors.startTime?.message}
+            {...register('startTime')}
+          />
 
-          <div className={styles.field}>
-            <label htmlFor={endTimeId} className={styles.label}>
-              <Clock size={14} />
-              <span>End Time</span>
-            </label>
-            <input
-              id={endTimeId}
-              type="time"
-              className={`${styles.input} ${errors.endTime ? styles.inputError : ''
-                }`}
-              {...register('endTime')}
-            />
-            {errors.endTime && (
-              <span className={styles.errorText}>{errors.endTime.message}</span>
-            )}
-          </div>
+          <Input
+            label="End Time"
+            labelIcon={<Clock size={14} />}
+            type="time"
+            error={errors.endTime?.message}
+            {...register('endTime')}
+          />
         </div>
 
         {/* Cost & Currency */}
         <div className={styles.row}>
-          <div className={styles.field}>
-            <label htmlFor={costId} className={styles.label}>
-              <DollarSign size={14} />
-              <span>Estimated Cost</span>
-            </label>
-            <input
-              id={costId}
-              type="number"
-              step="any"
-              min="0"
-              placeholder="0.00"
-              className={`${styles.input} ${errors.cost ? styles.inputError : ''}`}
-              {...register('cost')}
-            />
-            {errors.cost && (
-              <span className={styles.errorText}>{errors.cost.message}</span>
-            )}
-          </div>
+          <Input
+            label="Estimated Cost"
+            labelIcon={<DollarSign size={14} />}
+            type="number"
+            step="any"
+            min="0"
+            placeholder="0.00"
+            error={errors.cost?.message}
+            {...register('cost')}
+          />
 
-          <div className={styles.field}>
-            <label htmlFor={currencyId} className={styles.label}>
-              <span>Currency</span>
-            </label>
-            <select id={currencyId} className={styles.select} {...register('currency')}>
-              {currencies.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.code} ({c.symbol})
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Currency"
+            options={currencyOptions}
+            error={errors.currency?.message}
+            {...register('currency')}
+          />
         </div>
 
         {/* Location & Address */}
         <div className={styles.row}>
-          <div className={styles.field}>
-            <label htmlFor={locationNameId} className={styles.label}>
-              <MapPin size={14} />
-              <span>Location / Spot Area</span>
-            </label>
-            <input
-              id={locationNameId}
-              type="text"
-              placeholder="e.g. Jingumae, Shibuya"
-              className={styles.input}
-              {...register('locationName')}
-            />
-          </div>
+          <Input
+            label="Location / Spot Area"
+            labelIcon={<MapPin size={14} />}
+            placeholder="e.g. Jingumae, Shibuya"
+            error={errors.locationName?.message}
+            {...register('locationName')}
+          />
 
-          <div className={styles.field}>
-            <label htmlFor={addressId} className={styles.label}>
-              <span>Specific Address</span>
-            </label>
-            <input
-              id={addressId}
-              type="text"
-              placeholder="e.g. 4-30-3 Jingumae, Shibuya, Tokyo"
-              className={styles.input}
-              {...register('address')}
-            />
-          </div>
+          <Input
+            label="Specific Address"
+            placeholder="e.g. 4-30-3 Jingumae, Shibuya, Tokyo"
+            error={errors.address?.message}
+            {...register('address')}
+          />
         </div>
 
         {/* Coordinates (Optional lat/lng) */}
         <div className={styles.row}>
-          <div className={styles.field}>
-            <label htmlFor={latId} className={styles.label}>
-              <span>Latitude (Optional)</span>
-            </label>
-            <input
-              id={latId}
-              type="number"
-              step="any"
-              placeholder="e.g. 35.6672"
-              className={styles.input}
-              {...register('lat')}
-            />
-          </div>
+          <Input
+            label="Latitude (Optional)"
+            type="number"
+            step="any"
+            placeholder="e.g. 35.6672"
+            error={errors.lat?.message}
+            {...register('lat')}
+          />
 
-          <div className={styles.field}>
-            <label htmlFor={lngId} className={styles.label}>
-              <span>Longitude (Optional)</span>
-            </label>
-            <input
-              id={lngId}
-              type="number"
-              step="any"
-              placeholder="e.g. 139.7061"
-              className={styles.input}
-              {...register('lng')}
-            />
-          </div>
+          <Input
+            label="Longitude (Optional)"
+            type="number"
+            step="any"
+            placeholder="e.g. 139.7061"
+            error={errors.lng?.message}
+            {...register('lng')}
+          />
         </div>
 
         {/* Booking Reference & Notes */}
-        <div className={styles.field}>
-          <label htmlFor={bookingRefId} className={styles.label}>
-            <Bookmark size={14} />
-            <span>Booking Ref / Confirmation #</span>
-          </label>
-          <input
-            id={bookingRefId}
-            type="text"
-            placeholder="e.g. Ref #HG-890211 or Ticket QR Slot 17:00"
-            className={styles.input}
-            {...register('bookingRef')}
-          />
-        </div>
+        <Input
+          label="Booking Ref / Confirmation #"
+          labelIcon={<Bookmark size={14} />}
+          placeholder="e.g. Ref #HG-890211 or Ticket QR Slot 17:00"
+          error={errors.bookingRef?.message}
+          {...register('bookingRef')}
+        />
 
         <div className={styles.field}>
           <label htmlFor={notesId} className={styles.label}>
             <FileText size={14} />
-            <span>Notes, Tips & Booking Details</span>
+            <span>Notes, Tips &amp; Booking Details</span>
           </label>
           <textarea
             id={notesId}
             placeholder="e.g. Bring comfortable walking shoes, sake barrels photo spot, table reserved under Alex"
-            className={styles.textarea}
+            className={`${styles.textarea} ${errors.notes ? styles.inputError : ''}`}
+            aria-invalid={errors.notes ? true : undefined}
+            aria-describedby={errors.notes ? notesErrorId : undefined}
             {...register('notes')}
           />
           {errors.notes && (
-            <span className={styles.errorText}>{errors.notes.message}</span>
+            <span id={notesErrorId} className={styles.errorText} role="alert">
+              {errors.notes.message}
+            </span>
           )}
         </div>
 

@@ -70,11 +70,12 @@ export const placeEventSchema = z.object({
   bookingRef: z.string().max(50, { message: 'Booking ref is too long' }).optional(),
 }).refine(data => {
   if (data.startTime && data.endTime && data.startTime !== '' && data.endTime !== '') {
-    return data.endTime > data.startTime;
+    // endTime < startTime is valid: the event crosses midnight (e.g. 23:30 -> 06:15)
+    return data.endTime !== data.startTime;
   }
   return true;
 }, {
-  message: 'End time must be after start time',
+  message: 'End time must differ from start time',
   path: ['endTime']
 });
 

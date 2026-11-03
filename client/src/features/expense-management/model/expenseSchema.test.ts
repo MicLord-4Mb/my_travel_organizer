@@ -44,7 +44,7 @@ describe('expenseSchema validation', () => {
     it('accepts string input and parses into number', () => {
       const result = expenseSchema.safeParse({
         ...validExpense,
-        amount: '42.99' as any,
+        amount: '42.99',
       });
       expect(result.success).toBe(true);
       if (result.success) {
@@ -69,7 +69,7 @@ describe('expenseSchema validation', () => {
     });
 
     it('fails when amount is missing or empty string', () => {
-      const result = expenseSchema.safeParse({ ...validExpense, amount: '' as any });
+      const result = expenseSchema.safeParse({ ...validExpense, amount: '' });
       expect(result.success).toBe(false);
     });
   });
@@ -78,7 +78,7 @@ describe('expenseSchema validation', () => {
     it('fails with invalid category string', () => {
       const result = expenseSchema.safeParse({
         ...validExpense,
-        category: 'unsupported-category' as any,
+        category: 'unsupported-category',
       });
       expect(result.success).toBe(false);
     });

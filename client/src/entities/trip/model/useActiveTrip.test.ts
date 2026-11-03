@@ -58,13 +58,30 @@ describe('useActiveTrip', () => {
       isFetching: false,
       isError: false,
       refetch: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof apiSlice.useGetTripsQuery>);
 
     const { result } = renderHook(() => useActiveTrip());
 
     expect(result.current.status).toBe('loading');
     expect(result.current.activeTrip).toBeNull();
     expect(result.current.isLoading).toBe(true);
+  });
+
+  it('returns status="error" (not "no_trips") when the query failed without data', () => {
+    mockUseParams.mockReturnValue({ id: 'trip-1' });
+    mockUseGetTrips.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isFetching: false,
+      isError: true,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof apiSlice.useGetTripsQuery>);
+
+    const { result } = renderHook(() => useActiveTrip());
+
+    expect(result.current.status).toBe('error');
+    expect(result.current.activeTrip).toBeNull();
+    expect(result.current.isError).toBe(true);
   });
 
   it('returns status="no_trips" when query finishes with empty array', () => {
@@ -75,7 +92,7 @@ describe('useActiveTrip', () => {
       isFetching: false,
       isError: false,
       refetch: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof apiSlice.useGetTripsQuery>);
 
     const { result } = renderHook(() => useActiveTrip());
 
@@ -92,7 +109,7 @@ describe('useActiveTrip', () => {
       isFetching: false,
       isError: false,
       refetch: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof apiSlice.useGetTripsQuery>);
 
     const { result } = renderHook(() => useActiveTrip());
 
@@ -108,7 +125,7 @@ describe('useActiveTrip', () => {
       isFetching: false,
       isError: false,
       refetch: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof apiSlice.useGetTripsQuery>);
 
     const { result } = renderHook(() => useActiveTrip());
 
@@ -124,7 +141,7 @@ describe('useActiveTrip', () => {
       isFetching: false,
       isError: false,
       refetch: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof apiSlice.useGetTripsQuery>);
 
     const { result } = renderHook(() => useActiveTrip());
 
@@ -140,7 +157,7 @@ describe('useActiveTrip', () => {
       isFetching: false,
       isError: false,
       refetch: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof apiSlice.useGetTripsQuery>);
 
     const { result } = renderHook(() => useActiveTrip('trip-2'));
 

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Dialog } from './Dialog';
-import { Button } from '../Button';
+import * as RadixAlertDialog from '@radix-ui/react-alert-dialog';
+import { Button } from '@shared/ui/Button';
+import styles from './Dialog.module.css';
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -14,6 +15,12 @@ export interface ConfirmDialogProps {
   onConfirm: () => void | Promise<void>;
 }
 
+/**
+ * Accessible confirmation modal built on `@radix-ui/react-alert-dialog`.
+ *
+ * Renders with `role="alertdialog"`, traps keyboard focus, and requires an
+ * explicit user action (Cancel or Confirm) for irreversible operations.
+ */
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   open,
   onOpenChange,
@@ -30,34 +37,51 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title={title}
-      description={description}
-      maxWidth={440}
-      footer={
-        <>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-            disabled={isLoading}
-          >
-            {cancelLabel}
-          </Button>
-          <Button
-            type="button"
-            variant={variant}
-            onClick={handleConfirm}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Processing...' : confirmLabel}
-          </Button>
-        </>
-      }
-    >
-      <div />
-    </Dialog>
+    <RadixAlertDialog.Root open={open} onOpenChange={onOpenChange}>
+      <RadixAlertDialog.Portal>
+        <RadixAlertDialog.Overlay className={styles.overlay} />
+        <RadixAlertDialog.Content
+          className={styles.content}
+          style={{ maxWidth: 440 }}
+        >
+          <div className={styles.header}>
+            <div className={styles.titleArea}>
+              <RadixAlertDialog.Title className={styles.title}>
+                {title}
+              </RadixAlertDialog.Title>
+              <RadixAlertDialog.Description className={styles.description}>
+                {description}
+              </RadixAlertDialog.Description>
+            </div>
+          </div>
+
+          <div className={styles.footer}>
+            <RadixAlertDialog.Cancel asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => onOpenChange(false)}
+                disabled={isLoading}
+              >
+                {cancelLabel}
+              </Button>
+            </RadixAlertDialog.Cancel>
+            <RadixAlertDialog.Action asChild>
+              <Button
+                type="button"
+                variant={variant}
+                onClick={(e) => {
+                  e.preventDefault();
+                  void handleConfirm();
+                }}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Processing...' : confirmLabel}
+              </Button>
+            </RadixAlertDialog.Action>
+          </div>
+        </RadixAlertDialog.Content>
+      </RadixAlertDialog.Portal>
+    </RadixAlertDialog.Root>
   );
 };

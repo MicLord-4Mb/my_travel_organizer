@@ -11,9 +11,6 @@ describe('computeBudgetAnalytics', () => {
     status: 'planned',
     budgetLimit: 2000,
     currency: 'USD',
-    spentBudget: 0,
-    packedCount: 0,
-    totalChecklistCount: 0,
     categoryBudgets: {
       dining: 500,
       lodging: 1000,

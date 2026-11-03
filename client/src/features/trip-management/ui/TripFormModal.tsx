@@ -6,8 +6,7 @@ import { Dialog, Input, Select, Button, useToast } from '@shared/ui';
 import type { Trip } from '@shared/types/models';
 import { useCurrency } from '@shared/lib/useCurrency';
 import { toDateInputValue, addDaysLocalDate } from '@shared/lib/date';
-import { TRIP_STATUS_OPTIONS } from '@entities/trip';
-import { tripSchema, type TripFormData } from '../model/tripSchema';
+import { tripSchema, type TripFormData } from '@features/trip-management/model/tripSchema';
 import styles from './TripFormModal.module.css';
 
 const PRESET_COVERS = [
@@ -88,8 +87,8 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
       location: '',
       startDate: defaultDates.startDate,
       endDate: defaultDates.endDate,
-      status: 'planned',
-      budgetLimit: 2000,
+      isCancelled: false,
+      budgetLimit: '',
       currency: baseCurrency || 'USD',
       coverImageUrl: PRESET_COVERS[0].url,
     },
@@ -106,8 +105,8 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
           location: tripToEdit.location || '',
           startDate: tripToEdit.startDate,
           endDate: tripToEdit.endDate,
-          status: tripToEdit.status,
-          budgetLimit: tripToEdit.budgetLimit || 0,
+          isCancelled: tripToEdit.status === 'cancelled',
+          budgetLimit: tripToEdit.budgetLimit ?? '',
           currency: tripToEdit.currency || baseCurrency || 'USD',
           coverImageUrl: tripToEdit.coverImageUrl || PRESET_COVERS[0].url,
         });
@@ -118,8 +117,8 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
           location: '',
           startDate: toDateInputValue(new Date()),
           endDate: toDateInputValue(addDaysLocalDate(new Date(), 7)),
-          status: 'planned',
-          budgetLimit: 2000,
+          isCancelled: false,
+          budgetLimit: '',
           currency: baseCurrency || 'USD',
           coverImageUrl: PRESET_COVERS[0].url,
         });
@@ -157,7 +156,7 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
       }
       maxWidth={560}
     >
-      <form onSubmit={handleSubmit(handleFormSubmit)} className={styles.form}>
+      <form noValidate onSubmit={handleSubmit(handleFormSubmit)} className={styles.form}>
         <Input
           label="Trip Title"
           placeholder="e.g., Autumn in Tokyo & Kyoto"
@@ -166,21 +165,13 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
           {...register('title')}
         />
 
-        <div className={styles.row}>
-          <Input
-            label="Destination / Location"
-            placeholder="e.g., Tokyo, Japan"
-            required
-            error={errors.location?.message}
-            {...register('location')}
-          />
-          <Select
-            label="Status"
-            error={errors.status?.message}
-            options={TRIP_STATUS_OPTIONS}
-            {...register('status')}
-          />
-        </div>
+        <Input
+          label="Destination / Location"
+          placeholder="e.g., Tokyo, Japan"
+          required
+          error={errors.location?.message}
+          {...register('location')}
+        />
 
         <div className={styles.row}>
           <Input
@@ -209,8 +200,8 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
         <div className={styles.row}>
           <Input
             type="number"
-            label="Budget Limit"
-            placeholder="e.g., 2000"
+            label="Budget Limit (optional)"
+            placeholder="Leave empty for no limit"
             error={errors.budgetLimit?.message}
             {...register('budgetLimit', { valueAsNumber: true })}
           />
@@ -245,6 +236,13 @@ export const TripFormModal: React.FC<TripFormModalProps> = ({
             )}
           </div>
         </div>
+
+        {isEditing && (
+          <label className={styles.cancelRow}>
+            <input type="checkbox" {...register('isCancelled')} />
+            <span>Mark this trip as cancelled</span>
+          </label>
+        )}
 
         <div className={styles.coverPicker}>
           <label className={styles.thumbnailLabel} style={{ position: 'static', background: 'none', color: 'inherit', textAlign: 'left' }}>

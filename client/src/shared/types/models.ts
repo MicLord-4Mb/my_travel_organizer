@@ -99,20 +99,17 @@ export interface Trip extends AuditableEntity {
   endDate: string;
   /** Remote URL for cover/hero card imagery */
   coverImageUrl?: string;
-  /** Lifecycle progress status */
+  /**
+   * Lifecycle status. Derived from calendar dates on read (see `calculateTripStatus`);
+   * only `cancelled` is a persisted manual override.
+   */
   status: TripStatus;
-  /** Optional overall budget limit in base currency */
+  /** Optional overall budget limit in base currency (undefined = unconstrained) */
   budgetLimit?: number;
   /** ISO 4217 currency code (e.g., 'USD', 'EUR', 'JPY') */
   currency: string;
   /** Geographic destination or primary region */
   location?: string;
-  /** Cached total spent amount in base currency */
-  spentBudget?: number;
-  /** Cached count of packed checklist items */
-  packedCount?: number;
-  /** Cached total count of checklist items */
-  totalChecklistCount?: number;
   /** Specific spending limits per category */
   categoryBudgets?: Partial<Record<string, number>>;
 }

@@ -40,9 +40,9 @@ export const CategoryAllocations: React.FC<CategoryAllocationsProps> = ({
       id: 'transport',
       title: 'Flights & Transit',
       shortLabel: 'Transit',
-      icon: <Plane size={18} color="#3B82F6" />,
-      color: '#3B82F6',
-      bgTint: 'rgba(59, 130, 246, 0.12)',
+      icon: <Plane size={18} color="var(--color-category-transport)" />,
+      color: 'var(--color-category-transport)',
+      bgTint: 'var(--color-category-transport-bg)',
       spent: categoryTotals.transport || 0,
       cap: categoryCaps.transport,
       percentage: percentOfCap(categoryTotals.transport || 0, categoryCaps.transport),
@@ -51,9 +51,9 @@ export const CategoryAllocations: React.FC<CategoryAllocationsProps> = ({
       id: 'lodging',
       title: 'Hotels & Lodging',
       shortLabel: 'Lodging',
-      icon: <Hotel size={18} color="#8B5CF6" />,
-      color: '#8B5CF6',
-      bgTint: 'rgba(139, 92, 246, 0.12)',
+      icon: <Hotel size={18} color="var(--color-category-lodging)" />,
+      color: 'var(--color-category-lodging)',
+      bgTint: 'var(--color-category-lodging-bg)',
       spent: categoryTotals.lodging || 0,
       cap: categoryCaps.lodging,
       percentage: percentOfCap(categoryTotals.lodging || 0, categoryCaps.lodging),
@@ -62,9 +62,9 @@ export const CategoryAllocations: React.FC<CategoryAllocationsProps> = ({
       id: 'dining',
       title: 'Food & Dining',
       shortLabel: 'Dining',
-      icon: <Utensils size={18} color="#F59E0B" />,
-      color: '#F59E0B',
-      bgTint: 'rgba(245, 158, 11, 0.12)',
+      icon: <Utensils size={18} color="var(--color-category-dining)" />,
+      color: 'var(--color-category-dining)',
+      bgTint: 'var(--color-category-dining-bg)',
       spent: categoryTotals.dining || 0,
       cap: categoryCaps.dining,
       percentage: percentOfCap(categoryTotals.dining || 0, categoryCaps.dining),
@@ -74,9 +74,9 @@ export const CategoryAllocations: React.FC<CategoryAllocationsProps> = ({
       id: 'activities',
       title: 'Tours & Activities',
       shortLabel: 'Activities',
-      icon: <Ticket size={18} color="#10B981" />,
-      color: '#10B981',
-      bgTint: 'rgba(16, 185, 129, 0.12)',
+      icon: <Ticket size={18} color="var(--color-category-activities)" />,
+      color: 'var(--color-category-activities)',
+      bgTint: 'var(--color-category-activities-bg)',
       spent: categoryTotals.activities || 0,
       cap: categoryCaps.activities,
       percentage: percentOfCap(categoryTotals.activities || 0, categoryCaps.activities),
@@ -211,7 +211,7 @@ export const CategoryAllocations: React.FC<CategoryAllocationsProps> = ({
                   cy="18"
                   r="14"
                   fill="none"
-                  stroke="#3B82F6"
+                  stroke="var(--color-category-transport)"
                   strokeWidth="3.5"
                   strokeDasharray={`${lenTransport} ${circumference}`}
                   strokeDashoffset={offsetTransport}
@@ -225,7 +225,7 @@ export const CategoryAllocations: React.FC<CategoryAllocationsProps> = ({
                   cy="18"
                   r="14"
                   fill="none"
-                  stroke="#8B5CF6"
+                  stroke="var(--color-category-lodging)"
                   strokeWidth="3.5"
                   strokeDasharray={`${lenLodging} ${circumference}`}
                   strokeDashoffset={offsetLodging}
@@ -239,7 +239,7 @@ export const CategoryAllocations: React.FC<CategoryAllocationsProps> = ({
                   cy="18"
                   r="14"
                   fill="none"
-                  stroke="#F59E0B"
+                  stroke="var(--color-category-dining)"
                   strokeWidth="3.5"
                   strokeDasharray={`${lenDining} ${circumference}`}
                   strokeDashoffset={offsetDining}
@@ -253,7 +253,7 @@ export const CategoryAllocations: React.FC<CategoryAllocationsProps> = ({
                   cy="18"
                   r="14"
                   fill="none"
-                  stroke="#10B981"
+                  stroke="var(--color-category-activities)"
                   strokeWidth="3.5"
                   strokeDasharray={`${lenActivities} ${circumference}`}
                   strokeDashoffset={offsetActivities}

@@ -1,15 +1,17 @@
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useId, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import styles from './Select.module.css';
 
 export interface SelectOption {
-  value: string;
+  value: string | number;
   label: string;
   disabled?: boolean;
 }
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
+  labelIcon?: React.ReactNode;
+  labelRight?: React.ReactNode;
   options?: ReadonlyArray<SelectOption>;
   helperText?: string;
   error?: string;
@@ -20,6 +22,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   (
     {
       label,
+      labelIcon,
+      labelRight,
       options,
       helperText,
       error,
@@ -31,12 +35,21 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       id,
       onFocus,
       onBlur,
+      'aria-describedby': ariaDescribedByProp,
+      'aria-invalid': ariaInvalidProp,
       ...props
     },
     ref
   ) => {
     const [isFocused, setIsFocused] = useState(false);
-    const selectId = id || (label ? `select-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined);
+    const generatedId = useId();
+    const selectId = id || generatedId;
+    const errorId = `${selectId}-error`;
+    const helperId = `${selectId}-helper`;
+    const describedBy =
+      [ariaDescribedByProp, error ? errorId : helperText ? helperId : undefined]
+        .filter(Boolean)
+        .join(' ') || undefined;
 
     const handleFocus = (e: React.FocusEvent<HTMLSelectElement>) => {
       setIsFocused(true);
@@ -50,11 +63,17 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
     return (
       <div className={`${styles.fieldWrapper} ${containerClassName || ''}`}>
-        {label && (
-          <label htmlFor={selectId} className={styles.label}>
-            {label}
-            {required && <span className={styles.required}>*</span>}
-          </label>
+        {(label || labelRight) && (
+          <div className={styles.labelRow}>
+            {label && (
+              <label htmlFor={selectId} className={styles.label}>
+                {labelIcon && <span className={styles.labelIcon}>{labelIcon}</span>}
+                <span>{label}</span>
+                {required && <span className={styles.required}>*</span>}
+              </label>
+            )}
+            {labelRight && <span className={styles.labelRight}>{labelRight}</span>}
+          </div>
         )}
 
         <div
@@ -72,6 +91,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             disabled={disabled}
             required={required}
+            aria-invalid={ariaInvalidProp ?? (error ? true : undefined)}
+            aria-describedby={describedBy}
             onFocus={handleFocus}
             onBlur={handleBlur}
             className={`${styles.select} ${className || ''}`}
@@ -79,7 +100,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           >
             {options
               ? options.map((opt) => (
-                  <option key={opt.value} value={opt.value} disabled={opt.disabled}>
+                  <option key={String(opt.value)} value={opt.value} disabled={opt.disabled}>
                     {opt.label}
                   </option>
                 ))
@@ -91,11 +112,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         </div>
 
         {error ? (
-          <span className={styles.errorText} role="alert">
+          <span id={errorId} className={styles.errorText} role="alert">
             {error}
           </span>
         ) : helperText ? (
-          <span className={styles.helperText}>{helperText}</span>
+          <span id={helperId} className={styles.helperText}>
+            {helperText}
+          </span>
         ) : null}
       </div>
     );

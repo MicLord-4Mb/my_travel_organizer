@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 import {
   sessionReducer,
+  sessionListenerMiddleware,
   setCredentials,
   logOut,
   updateProfile,
@@ -19,6 +21,15 @@ import {
 import type { User } from '@shared/types/models';
 import type { SessionState } from './types';
 
+function createSessionTestStore(preloadedSession?: SessionState) {
+  return configureStore({
+    reducer: { session: sessionReducer },
+    preloadedState: preloadedSession ? { session: preloadedSession } : undefined,
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().prepend(sessionListenerMiddleware.middleware),
+  });
+}
+
 describe('sessionSlice and selectors', () => {
   const mockUser: User = {
     id: 'user-42',
@@ -35,7 +46,7 @@ describe('sessionSlice and selectors', () => {
     vi.clearAllMocks();
   });
 
-  describe('session actions and reducer', () => {
+  describe('pure reducer and listener middleware persistence', () => {
     const emptyState: SessionState = {
       user: null,
       token: null,
@@ -43,12 +54,23 @@ describe('sessionSlice and selectors', () => {
       error: null,
     };
 
-    it('handles setCredentials and persists token and user to localStorage', () => {
+    it('keeps reducer pure (no storage writes when called directly)', () => {
       const nextState = sessionReducer(
         emptyState,
         setCredentials({ user: mockUser, token: mockToken })
       );
 
+      expect(nextState.user).toEqual(mockUser);
+      expect(nextState.token).toBe(mockToken);
+      expect(nextState.status).toBe('authenticated');
+      expect(window.localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull();
+    });
+
+    it('persists token and user to localStorage via sessionListenerMiddleware on setCredentials', () => {
+      const store = createSessionTestStore(emptyState);
+      store.dispatch(setCredentials({ user: mockUser, token: mockToken }));
+
+      const nextState = store.getState().session;
       expect(nextState.user).toEqual(mockUser);
       expect(nextState.token).toBe(mockToken);
       expect(nextState.status).toBe('authenticated');
@@ -58,7 +80,7 @@ describe('sessionSlice and selectors', () => {
       expect(JSON.parse(window.localStorage.getItem(AUTH_USER_KEY)!)).toEqual(mockUser);
     });
 
-    it('handles logOut and cleans up localStorage', () => {
+    it('cleans up localStorage via sessionListenerMiddleware on logOut', () => {
       const authedState: SessionState = {
         user: mockUser,
         token: mockToken,
@@ -69,8 +91,10 @@ describe('sessionSlice and selectors', () => {
       window.localStorage.setItem(AUTH_TOKEN_KEY, mockToken);
       window.localStorage.setItem(AUTH_USER_KEY, JSON.stringify(mockUser));
 
-      const nextState = sessionReducer(authedState, logOut());
+      const store = createSessionTestStore(authedState);
+      store.dispatch(logOut());
 
+      const nextState = store.getState().session;
       expect(nextState.user).toBeNull();
       expect(nextState.token).toBeNull();
       expect(nextState.status).toBe('unauthenticated');
@@ -78,7 +102,7 @@ describe('sessionSlice and selectors', () => {
       expect(window.localStorage.getItem(AUTH_USER_KEY)).toBeNull();
     });
 
-    it('handles updateProfile and syncs updated user to localStorage', () => {
+    it('syncs updated user to localStorage via sessionListenerMiddleware on updateProfile', () => {
       const authedState: SessionState = {
         user: mockUser,
         token: mockToken,
@@ -86,11 +110,10 @@ describe('sessionSlice and selectors', () => {
         error: null,
       };
 
-      const nextState = sessionReducer(
-        authedState,
-        updateProfile({ name: 'Alex Wanderer' })
-      );
+      const store = createSessionTestStore(authedState);
+      store.dispatch(updateProfile({ name: 'Alex Wanderer' }));
 
+      const nextState = store.getState().session;
       expect(nextState.user?.name).toBe('Alex Wanderer');
       expect(nextState.user?.email).toBe(mockUser.email);
 

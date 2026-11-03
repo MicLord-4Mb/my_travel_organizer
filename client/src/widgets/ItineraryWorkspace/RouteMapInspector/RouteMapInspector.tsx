@@ -8,12 +8,12 @@ import {
   Navigation,
 } from 'lucide-react';
 import type { PlaceEvent, EventCategory, EntityId } from '@shared/types/models';
-import type { TransitMode } from '@entities/itinerary';
-import { StopInspector } from './StopInspector';
 import {
+  type TransitMode,
   getCoordinatesDistanceKm,
   formatTimeWithPeriod,
-} from '../lib/itineraryUtils';
+} from '@entities/itinerary';
+import { StopInspector } from './StopInspector';
 import { useToast } from '@shared/ui';
 import styles from './RouteMapInspector.module.css';
 
@@ -29,10 +29,10 @@ export interface RouteMapInspectorProps {
 }
 
 const CATEGORY_COLORS: Record<EventCategory, string> = {
-  dining: '#F59E0B',
-  activities: '#10B981',
-  transport: '#3B82F6',
-  lodging: '#8B5CF6',
+  dining: 'var(--color-category-dining)',
+  activities: 'var(--color-category-activities)',
+  transport: 'var(--color-category-transport)',
+  lodging: 'var(--color-category-lodging)',
 };
 
 // Preset positions for realistic aesthetic presentation in the map container (percentages)
@@ -134,7 +134,7 @@ export const RouteMapInspector: React.FC<RouteMapInspectorProps> = ({
               {geocodedCount} geocoded stops •{' '}
               {totalDistanceKm !== null ? `${totalDistanceKm} km total distance` : 'distance unknown'}
             </span>
-            <span style={{ fontSize: '10px', color: '#f59e0b', marginTop: '2px', display: 'block' }}>
+            <span style={{ fontSize: 'var(--font-size-micro)', color: 'var(--color-status-warning)', marginTop: '2px', display: 'block' }}>
               Interactive map coming in Stage 2 (Static Preview)
             </span>
           </div>
@@ -189,7 +189,7 @@ export const RouteMapInspector: React.FC<RouteMapInspectorProps> = ({
               <path
                 d={svgPathD}
                 fill="none"
-                stroke="#0D9488"
+                stroke="var(--color-primary)"
                 strokeWidth="3.5"
                 strokeDasharray="6,4"
                 strokeLinecap="round"
@@ -201,7 +201,7 @@ export const RouteMapInspector: React.FC<RouteMapInspectorProps> = ({
           {markerPositions.map(({ event, index, topPercent, leftPercent }) => {
             const isSelected = selectedEventId === event.id;
             const cat = (event.category || 'activities') as EventCategory;
-            const pinColor = CATEGORY_COLORS[cat] || '#10B981';
+            const pinColor = CATEGORY_COLORS[cat] || 'var(--color-category-activities)';
 
             return (
               <div
@@ -281,7 +281,7 @@ export const RouteMapInspector: React.FC<RouteMapInspectorProps> = ({
             <div className={styles.waypointsList}>
               {events.map((event, i) => {
                 const cat = (event.category || 'activities') as EventCategory;
-                const color = CATEGORY_COLORS[cat] || '#10B981';
+                const color = CATEGORY_COLORS[cat] || 'var(--color-category-activities)';
                 const time = formatTimeWithPeriod(event.startTime);
 
                 return (

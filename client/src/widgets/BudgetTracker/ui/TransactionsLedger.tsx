@@ -132,17 +132,17 @@ export const TransactionsLedger: React.FC<TransactionsLedgerProps> = ({
     const norm = normalizeCategory(category);
     switch (norm) {
       case 'transport':
-        return <Plane size={16} color="#3B82F6" />;
+        return <Plane size={16} color="var(--color-category-transport)" />;
       case 'lodging':
-        return <Hotel size={16} color="#8B5CF6" />;
+        return <Hotel size={16} color="var(--color-category-lodging)" />;
       case 'dining':
-        return <Utensils size={16} color="#F59E0B" />;
+        return <Utensils size={16} color="var(--color-category-dining)" />;
       case 'activities':
-        return <Ticket size={16} color="#10B981" />;
+        return <Ticket size={16} color="var(--color-category-activities)" />;
       case 'shopping':
-        return <ShoppingBag size={16} color="#EC4899" />;
+        return <ShoppingBag size={16} color="var(--color-category-shopping)" />;
       default:
-        return <CreditCard size={16} color="#64748B" />;
+        return <CreditCard size={16} color="var(--color-category-other)" />;
     }
   };
 

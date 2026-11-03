@@ -60,16 +60,38 @@
   font-weight: 600;
 }
 
+.categoryBtnActive[data-cat="dining"] {
+  color: var(--color-category-dining);
+  border-color: var(--color-category-dining);
+}
+
+.categoryBtnActive[data-cat="activities"] {
+  color: var(--color-category-activities);
+  border-color: var(--color-category-activities);
+}
+
+.categoryBtnActive[data-cat="transport"] {
+  color: var(--color-category-transport);
+  border-color: var(--color-category-transport);
+}
+
+.categoryBtnActive[data-cat="lodging"] {
+  color: var(--color-category-lodging);
+  border-color: var(--color-category-lodging);
+}
+
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-md);
+  align-items: start;
 }
 
 .rowThree {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: var(--space-md);
+  align-items: start;
 }
 
 @media (max-width: 600px) {
@@ -89,37 +111,30 @@
 .label {
   font-size: var(--font-size-caption);
   font-weight: 500;
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
-.required {
-  color: var(--color-status-danger);
-}
-
-.input,
-.select,
 .textarea {
   width: 100%;
   padding: 8px 12px;
-  background: var(--color-canvas-bg);
+  background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
   font-size: var(--font-size-body);
   color: var(--color-text-primary);
   font-family: inherit;
+  resize: vertical;
+  min-height: 70px;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.input:focus,
-.select:focus,
 .textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-focus);
-  background: var(--color-surface);
+  box-shadow: 0 0 0 2px var(--color-primary-focus);
 }
 
 .inputError {
@@ -127,18 +142,9 @@
 }
 
 .errorText {
-  font-size: var(--font-size-micro);
+  font-size: var(--font-size-caption);
   color: var(--color-status-danger);
-}
-
-.textarea {
-  resize: vertical;
-  min-height: 70px;
-}
-
-.hint {
-  font-size: var(--font-size-micro);
-  color: var(--color-text-muted);
+  font-weight: 500;
 }
 
 .actions {

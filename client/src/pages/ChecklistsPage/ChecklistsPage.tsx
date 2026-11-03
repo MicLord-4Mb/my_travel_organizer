@@ -1,16 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  useGetChecklistsByTripIdQuery,
-  useCreateChecklistItemMutation,
-  useUpdateChecklistItemMutation,
-  useDeleteChecklistItemMutation,
-} from '@shared/api/apiSlice';
+import { useGetChecklistsByTripIdQuery } from '@shared/api/apiSlice';
 import { useActiveTrip } from '@entities/trip';
 import {
   AddChecklistItemModal,
   ApplyTemplateModal,
-  CHECKLIST_TEMPLATES,
+  useChecklistBatchActions,
   type ChecklistItemFormData,
 } from '@features/checklist-management';
 import { ChecklistHeader } from './components/ChecklistHeader/ChecklistHeader';
@@ -25,17 +20,21 @@ import {
   ClipboardList,
   Luggage,
 } from 'lucide-react';
-import { useToast } from '@shared/ui';
+import { Button, QueryErrorState } from '@shared/ui';
 import styles from './ChecklistsPage.module.css';
 
 export const ChecklistsPage: React.FC = () => {
   const { id: routeTripId } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   // Selected Trip state
   const [userSelectedTripId, setUserSelectedTripId] = useState<string | null>(null);
-  const { activeTrip: currentTrip, status: tripStatus, allTrips: trips } = useActiveTrip(userSelectedTripId);
+  const {
+    activeTrip: currentTrip,
+    status: tripStatus,
+    allTrips: trips,
+    refetch: refetchTrips,
+  } = useActiveTrip(userSelectedTripId);
   const effectiveTripId = currentTrip?.id;
 
   // UI Filter & Tab states
@@ -52,9 +51,14 @@ export const ChecklistsPage: React.FC = () => {
   });
   const checklistStatus = isLoading ? 'loading' : 'succeeded';
 
-  const [createChecklistItem] = useCreateChecklistItemMutation();
-  const [updateChecklistItem] = useUpdateChecklistItemMutation();
-  const [deleteChecklistItem] = useDeleteChecklistItemMutation();
+  const {
+    toggleItem: handleToggleItem,
+    deleteItem: handleDeleteItem,
+    markAllCompleted: handleMarkAllCompleted,
+    resetChecklist: handleResetChecklist,
+    addItem,
+    applyTemplate: handleApplyTemplate,
+  } = useChecklistBatchActions(effectiveTripId, allItems);
 
   // Filter items by selected trip
   const tripItems = useMemo(() => {
@@ -72,13 +76,21 @@ export const ChecklistsPage: React.FC = () => {
   const completedCount = tripItems.filter((i) => i.isCompleted).length;
   const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  // Pre-trip items
+  // Pre-trip items (including items without an explicit luggage type whose category belongs to pretrip)
+  const isPretripItem = (i: (typeof displayedItems)[number]) =>
+    i.type === 'pretrip' ||
+    (!i.type &&
+      (i.category === 'documents' ||
+        i.category === 'insurance' ||
+        i.category === 'bookings' ||
+        i.category === 'tasks'));
+
   const pretripItems = useMemo(() => {
-    return displayedItems.filter((i) => i.type === 'pretrip');
+    return displayedItems.filter(isPretripItem);
   }, [displayedItems]);
 
-  const pretripTotal = tripItems.filter((i) => i.type === 'pretrip').length;
-  const pretripDone = tripItems.filter((i) => i.type === 'pretrip' && i.isCompleted).length;
+  const pretripTotal = tripItems.filter(isPretripItem).length;
+  const pretripDone = tripItems.filter((i) => isPretripItem(i) && i.isCompleted).length;
 
   const docsAndInsuranceItems = useMemo(() => {
     return pretripItems.filter(
@@ -88,20 +100,24 @@ export const ChecklistsPage: React.FC = () => {
 
   const bookingsAndTasksItems = useMemo(() => {
     return pretripItems.filter(
-      (i) => i.category === 'bookings' || i.category === 'tasks'
+      (i) => i.category !== 'documents' && i.category !== 'insurance'
     );
   }, [pretripItems]);
 
   // Luggage items
+  const isLuggageItem = (i: (typeof displayedItems)[number]) => !isPretripItem(i);
+
   const luggageItems = useMemo(() => {
-    return displayedItems.filter((i) => i.type === 'luggage');
+    return displayedItems.filter(isLuggageItem);
   }, [displayedItems]);
 
-  const luggageTotal = tripItems.filter((i) => i.type === 'luggage').length;
-  const luggageDone = tripItems.filter((i) => i.type === 'luggage' && i.isCompleted).length;
+  const luggageTotal = tripItems.filter(isLuggageItem).length;
+  const luggageDone = tripItems.filter((i) => isLuggageItem(i) && i.isCompleted).length;
 
   const gearItems = useMemo(() => {
-    return luggageItems.filter((i) => i.category === 'gear');
+    return luggageItems.filter(
+      (i) => i.category !== 'clothes' && i.category !== 'meds'
+    );
   }, [luggageItems]);
 
   const clothesItems = useMemo(() => {
@@ -113,114 +129,8 @@ export const ChecklistsPage: React.FC = () => {
   }, [luggageItems]);
 
   // Handlers
-  const handleToggleItem = async (id: string, isCompleted: boolean) => {
-    try {
-      await updateChecklistItem({ id, payload: { isCompleted } }).unwrap();
-    } catch {
-      toast({ title: 'Error', description: 'Failed to update item', variant: 'destructive' });
-    }
-  };
-
-  const handleDeleteItem = async (id: string) => {
-    try {
-      await deleteChecklistItem(id).unwrap();
-    } catch {
-      toast({ title: 'Error', description: 'Failed to delete item', variant: 'destructive' });
-    }
-  };
-
-  const handleMarkAllCompleted = async () => {
-    if (effectiveTripId) {
-      try {
-        await Promise.all(
-          tripItems
-            .filter(i => !i.isCompleted)
-            .map(i => updateChecklistItem({ id: i.id, payload: { isCompleted: true } }).unwrap())
-        );
-        toast({ title: 'Success', description: 'All items marked as completed', variant: 'success' });
-      } catch {
-        toast({ title: 'Error', description: 'Failed to update some items', variant: 'destructive' });
-      }
-    }
-  };
-
-  const handleResetChecklist = async () => {
-    if (effectiveTripId) {
-      try {
-        await Promise.all(
-          tripItems
-            .filter(i => i.isCompleted)
-            .map(i => updateChecklistItem({ id: i.id, payload: { isCompleted: false } }).unwrap())
-        );
-        toast({ title: 'Success', description: 'Checklist reset successfully', variant: 'success' });
-      } catch {
-        toast({ title: 'Error', description: 'Failed to reset checklist', variant: 'destructive' });
-      }
-    }
-  };
-
-  const handleApplyTemplate = async (templateId: string) => {
-    const template = CHECKLIST_TEMPLATES[templateId];
-    if (!effectiveTripId || !template) return;
-
-    const existingTitles = new Set(tripItems.map((i) => i.title.toLowerCase()));
-    const newItems = template.items.filter(
-      (item) => !existingTitles.has(item.title.toLowerCase())
-    );
-
-    if (newItems.length === 0) {
-      toast({
-        title: 'Already Applied',
-        description: `All items from "${template.name}" are already in your checklist.`,
-      });
-      return;
-    }
-
-    try {
-      await Promise.all(
-        newItems.map((item) =>
-          createChecklistItem({
-            tripId: effectiveTripId,
-            title: item.title,
-            type: item.type,
-            category: item.category,
-            priority: item.priority,
-            quantity: item.quantity ?? 1,
-            isCompleted: false,
-          }).unwrap()
-        )
-      );
-      toast({
-        title: 'Template Applied',
-        description: `Added ${newItems.length} items from "${template.name}".`,
-        variant: 'success',
-      });
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to apply template items',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleAddItemModalSubmit = async (data: ChecklistItemFormData) => {
-    if (effectiveTripId) {
-      try {
-        await createChecklistItem({
-          tripId: effectiveTripId,
-          title: data.title,
-          type: data.type,
-          category: data.category,
-          priority: data.priority,
-          quantity: data.quantity || 1,
-          isCompleted: false,
-        }).unwrap();
-        toast({ title: 'Success', description: 'Item added successfully', variant: 'success' });
-      } catch {
-        toast({ title: 'Error', description: 'Failed to add item', variant: 'destructive' });
-      }
-    }
+    await addItem(data);
   };
 
   const handleQuickAdd = async (item: {
@@ -229,22 +139,7 @@ export const ChecklistsPage: React.FC = () => {
     category: 'documents' | 'bookings' | 'insurance' | 'clothes' | 'gear' | 'meds' | 'tasks';
     priority: 'high' | 'normal' | 'optional';
   }) => {
-    if (effectiveTripId) {
-      try {
-        await createChecklistItem({
-          tripId: effectiveTripId,
-          title: item.title,
-          type: item.type,
-          category: item.category,
-          priority: item.priority,
-          quantity: 1,
-          isCompleted: false,
-        }).unwrap();
-        toast({ title: 'Success', description: 'Item added successfully', variant: 'success' });
-      } catch {
-        toast({ title: 'Error', description: 'Failed to add item', variant: 'destructive' });
-      }
-    }
+    await addItem(item);
   };
 
   const handleSelectTrip = (tripId: string) => {
@@ -257,10 +152,18 @@ export const ChecklistsPage: React.FC = () => {
   if (tripStatus === 'loading') {
     return (
       <div className={styles.page}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', gap: '1rem' }}>
-          <div style={{ width: 32, height: 32, border: '3px solid var(--color-border-subtle)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-          <span style={{ color: 'var(--color-text-secondary)', fontSize: '14px' }}>Loading checklist workspace...</span>
+        <div className={styles.loadingContainer}>
+          <div className={styles.spinner} />
+          <span>Loading checklist workspace...</span>
         </div>
+      </div>
+    );
+  }
+
+  if (tripStatus === 'error') {
+    return (
+      <div className={styles.page}>
+        <QueryErrorState title="Could not load your checklists" onRetry={refetchTrips} />
       </div>
     );
   }
@@ -268,12 +171,12 @@ export const ChecklistsPage: React.FC = () => {
   if (tripStatus === 'not_found' || (!currentTrip && routeTripId)) {
     return (
       <div className={styles.page}>
-        <div style={{ padding: '3rem', textAlign: 'center' }}>
+        <div className={styles.emptyContainer}>
           <h2>404 - Trip Not Found</h2>
           <p>The trip you are looking for does not exist.</p>
-          <button onClick={() => navigate('/')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          <Button variant="primary" onClick={() => navigate('/')}>
             Back to Trips
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -282,12 +185,12 @@ export const ChecklistsPage: React.FC = () => {
   if (tripStatus === 'no_trips' || !currentTrip) {
     return (
       <div className={styles.page}>
-        <div style={{ padding: '3rem', textAlign: 'center' }}>
+        <div className={styles.emptyContainer}>
           <h2>No Trips Available</h2>
           <p>Please return to the overview and create a trip.</p>
-          <button onClick={() => navigate('/')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          <Button variant="primary" onClick={() => navigate('/')}>
             Go to Overview
-          </button>
+          </Button>
         </div>
       </div>
     );

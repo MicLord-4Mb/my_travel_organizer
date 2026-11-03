@@ -6,7 +6,7 @@ import { CHECKLIST_TYPE_OPTIONS, CHECKLIST_CATEGORIES_BY_TYPE, CHECKLIST_PRIORIT
 import {
   checklistItemSchema,
   type ChecklistItemFormData,
-} from '../model/checklistItemSchema';
+} from '@features/checklist-management/model/checklistItemSchema';
 import styles from './AddChecklistItemModal.module.css';
 
 export interface AddChecklistItemModalProps {
@@ -44,8 +44,10 @@ export const AddChecklistItemModal: React.FC<AddChecklistItemModalProps> = ({
   const selectedCategory = useWatch({ control, name: 'category' });
 
   useEffect(() => {
-    if (selectedType === 'luggage' && selectedCategory === 'documents') {
-      setValue('category', 'gear');
+    const validCategoriesForType = CHECKLIST_CATEGORIES_BY_TYPE[selectedType] || [];
+    const isCurrentValid = validCategoriesForType.some((opt) => opt.value === selectedCategory);
+    if (!isCurrentValid && validCategoriesForType.length > 0) {
+      setValue('category', validCategoriesForType[0].value);
     }
   }, [selectedType, selectedCategory, setValue]);
 

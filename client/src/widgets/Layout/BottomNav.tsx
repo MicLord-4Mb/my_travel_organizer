@@ -4,10 +4,15 @@ import { Luggage, Calendar, Plus, CreditCard, CheckSquare } from 'lucide-react';
 import styles from './BottomNav.module.css';
 
 export interface BottomNavProps {
+  activeTripId?: string;
   onPlanNewTrip?: () => void;
 }
 
-export const BottomNav: React.FC<BottomNavProps> = ({ onPlanNewTrip }) => {
+export const BottomNav: React.FC<BottomNavProps> = ({ activeTripId, onPlanNewTrip }) => {
+  const itineraryPath = activeTripId ? `/trips/${activeTripId}` : '/itinerary';
+  const budgetPath = activeTripId ? `/trips/${activeTripId}/budget` : '/budget';
+  const checklistsPath = activeTripId ? `/trips/${activeTripId}/checklists` : '/checklists';
+
   return (
     <nav className={styles.bottomNav} aria-label="Mobile Navigation">
       <NavLink
@@ -22,7 +27,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onPlanNewTrip }) => {
       </NavLink>
 
       <NavLink
-        to="/itinerary"
+        to={itineraryPath}
+        end
         className={({ isActive }) =>
           `${styles.navItem} ${isActive ? styles.active : ''}`
         }
@@ -43,7 +49,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onPlanNewTrip }) => {
       </div>
 
       <NavLink
-        to="/budget"
+        to={budgetPath}
         className={({ isActive }) =>
           `${styles.navItem} ${isActive ? styles.active : ''}`
         }
@@ -53,7 +59,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onPlanNewTrip }) => {
       </NavLink>
 
       <NavLink
-        to="/checklists"
+        to={checklistsPath}
         className={({ isActive }) =>
           `${styles.navItem} ${isActive ? styles.active : ''}`
         }

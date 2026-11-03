@@ -9,7 +9,11 @@ import {
 } from '@shared/api/apiSlice';
 import { useActiveTrip } from '@entities/trip';
 import type { PlaceEvent, EventCategory } from '@shared/types/models';
-import type { ItineraryCategoryFilter, TransitMode } from '@entities/itinerary';
+import {
+  planEventDayChange,
+  type ItineraryCategoryFilter,
+  type TransitMode,
+} from '@entities/itinerary';
 import {
   TripContextHeader,
   StickyDayRail,
@@ -21,10 +25,10 @@ import {
   PlaceEventModal,
   type PlaceEventFormData,
 } from '@features/itinerary-management';
-import { TripFormModal } from '@features/trip-management';
+import { TripFormModal, toTripPayload } from '@features/trip-management';
 import { useCurrency } from '@shared/lib/useCurrency';
 import { parseLocalDate, addDaysLocalDate, toDateInputValue } from '@shared/lib/date';
-import {useToast, ConfirmDialog, Button} from '@shared/ui';
+import { useToast, ConfirmDialog, Button, QueryErrorState } from '@shared/ui';
 import styles from './TripDetailsPage.module.css';
 
 /**
@@ -43,7 +47,7 @@ export default function TripDetailsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { rates, baseCurrency } = useCurrency();
-  const { activeTrip, status: tripStatus } = useActiveTrip();
+  const { activeTrip, status: tripStatus, refetch: refetchTrips } = useActiveTrip();
 
   // Local UI State
   const [activeDayIndex, setActiveDayIndex] = useState(0);
@@ -78,10 +82,11 @@ export default function TripDetailsPage() {
   const safeDayIndex = tripDays.length > 0 ? Math.min(Math.max(0, activeDayIndex), tripDays.length - 1) : 0;
 
   const activeDayEvents = useMemo(() => {
+    const maxDayIdx = Math.max(0, tripDays.length - 1);
     return allEvents
-      .filter((e) => e.dayIndex === safeDayIndex)
+      .filter((e) => Math.min(Math.max(0, e.dayIndex ?? 0), maxDayIdx) === safeDayIndex)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  }, [allEvents, safeDayIndex]);
+  }, [allEvents, safeDayIndex, tripDays.length]);
 
   const filteredEvents = useMemo(() => {
     if (categoryFilter === 'all') return activeDayEvents;
@@ -201,12 +206,20 @@ export default function TripDetailsPage() {
     if (!activeTrip) return;
 
     if (eventToEdit) {
+      // Moving an event to another day: append it to the end of the target day and
+      // compact the source day so `order` stays gapless in both.
+      const dayChanged = (eventToEdit.dayIndex ?? 0) !== formData.dayIndex;
+      const dayPlan = dayChanged
+        ? planEventDayChange(allEvents, eventToEdit.id, formData.dayIndex)
+        : null;
+
       await updateEvent({
         id: eventToEdit.id,
         payload: {
           title: formData.title,
           category: formData.category,
           dayIndex: formData.dayIndex,
+          ...(dayPlan ? { order: dayPlan.targetOrder } : {}),
           startTime: formData.startTime || undefined,
           endTime: formData.endTime || undefined,
           cost: formData.cost,
@@ -221,6 +234,13 @@ export default function TripDetailsPage() {
           },
         },
       }).unwrap();
+
+      if (dayPlan && dayPlan.sourceReindexed.length > 0) {
+        await reorderEvents({
+          tripId: activeTrip.id,
+          events: dayPlan.sourceReindexed,
+        }).unwrap();
+      }
     } else {
       const targetDayEvents = allEvents.filter(e => e.dayIndex === formData.dayIndex);
       const order = targetDayEvents.length > 0 ? Math.max(...targetDayEvents.map(e => e.order ?? 0)) + 1 : 0;
@@ -252,6 +272,14 @@ export default function TripDetailsPage() {
       <div className={styles.loadingContainer}>
         <div className={styles.spinner} />
         <span>Loading itinerary workspace...</span>
+      </div>
+    );
+  }
+
+  if (tripStatus === 'error') {
+    return (
+      <div className={styles.emptyContainer}>
+        <QueryErrorState title="Could not load this trip" onRetry={refetchTrips} />
       </div>
     );
   }
@@ -352,7 +380,7 @@ export default function TripDetailsPage() {
           onSubmit={async (tripData) => {
             await updateTripMutation({
               id: activeTrip.id,
-              payload: tripData,
+              payload: toTripPayload(tripData),
             }).unwrap();
           }}
         />

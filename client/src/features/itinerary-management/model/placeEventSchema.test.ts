@@ -54,7 +54,7 @@ describe('placeEventSchema validation', () => {
     });
 
     it('coerces string numbers to integers', () => {
-      const result = placeEventSchema.safeParse({ ...validEvent, dayIndex: '2' as any });
+      const result = placeEventSchema.safeParse({ ...validEvent, dayIndex: '2' });
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.dayIndex).toBe(2);
@@ -86,24 +86,26 @@ describe('placeEventSchema validation', () => {
       expect(hourOverflow.success).toBe(false);
     });
 
-    it('fails when endTime is earlier than or equal to startTime', () => {
-      const earlierEnd = placeEventSchema.safeParse({
+    it('allows overnight events where endTime is earlier than startTime', () => {
+      const overnight = placeEventSchema.safeParse({
         ...validEvent,
-        startTime: '14:00',
-        endTime: '12:00',
+        startTime: '23:30',
+        endTime: '06:15',
       });
-      expect(earlierEnd.success).toBe(false);
-      if (!earlierEnd.success) {
-        const issue = earlierEnd.error.issues.find((i) => i.path.includes('endTime'));
-        expect(issue?.message).toBe('End time must be after start time');
-      }
+      expect(overnight.success).toBe(true);
+    });
 
+    it('fails when endTime equals startTime', () => {
       const equalTime = placeEventSchema.safeParse({
         ...validEvent,
         startTime: '14:00',
         endTime: '14:00',
       });
       expect(equalTime.success).toBe(false);
+      if (!equalTime.success) {
+        const issue = equalTime.error.issues.find((i) => i.path.includes('endTime'));
+        expect(issue?.message).toBe('End time must differ from start time');
+      }
     });
 
     it('permits empty strings or missing values for start and end times', () => {
@@ -127,8 +129,8 @@ describe('placeEventSchema validation', () => {
     it('coerces empty string or null for lat/lng to undefined', () => {
       const result = placeEventSchema.safeParse({
         ...validEvent,
-        lat: '' as any,
-        lng: null as any,
+        lat: '',
+        lng: null,
       });
       expect(result.success).toBe(true);
       if (result.success) {

@@ -6,6 +6,8 @@
  * in time zones west of UTC. This module guarantees DST-safe, local midnight calculations.
  */
 
+import type { Trip, TripStatus } from '@shared/types/models';
+
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
@@ -120,4 +122,27 @@ export function addDaysLocalDate(date: Date, days: number): Date {
   const result = new Date(date);
   result.setDate(result.getDate() + days);
   return startOfLocalDay(result);
+}
+
+
+/**
+ * Derives the lifecycle status of a trip from its calendar dates.
+ *
+ * cancelled is the only manual override and is always preserved. Every other
+ * status is computed by comparing startDate / ndDate with today's local date.
+ *
+ * @param {Pick<Trip, 'startDate' | 'endDate' | 'status'>} trip - Trip dates and stored status.
+ * @param {Date} [today=new Date()] - Reference date (injectable for deterministic tests).
+ * @returns {TripStatus} cancelled, completed, in_progress or planned.
+ */
+export function calculateTripStatus(
+  trip: Pick<Trip, 'startDate' | 'endDate' | 'status'>,
+  today: Date = new Date()
+): TripStatus {
+  if (trip.status === 'cancelled') return 'cancelled';
+  const todayStr = toDateInputValue(today);
+  // YYYY-MM-DD strings compare chronologically
+  if (trip.endDate < todayStr) return 'completed';
+  if (trip.startDate <= todayStr && todayStr <= trip.endDate) return 'in_progress';
+  return 'planned';
 }

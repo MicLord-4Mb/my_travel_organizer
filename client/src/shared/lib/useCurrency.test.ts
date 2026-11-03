@@ -28,7 +28,7 @@ describe('useCurrency', () => {
         isLoading: false,
         isError: false,
         refetch: vi.fn(),
-      } as any);
+      } as unknown as ReturnType<typeof apiSlice.useGetCurrenciesQuery>);
 
       mockGetExchangeRates.mockReturnValue({
         data: {
@@ -43,7 +43,7 @@ describe('useCurrency', () => {
         isLoading: false,
         isError: false,
         refetch: vi.fn(),
-      } as any);
+      } as unknown as ReturnType<typeof apiSlice.useGetExchangeRatesQuery>);
     });
 
     it('returns live currencies, symbols, and rate tables', () => {
@@ -114,7 +114,7 @@ describe('useCurrency', () => {
         isLoading: false,
         isError: true,
         refetch: vi.fn(),
-      } as any);
+      } as unknown as ReturnType<typeof apiSlice.useGetCurrenciesQuery>);
 
       // Exchange rates API failed or returned undefined
       mockGetExchangeRates.mockReturnValue({
@@ -122,7 +122,7 @@ describe('useCurrency', () => {
         isLoading: false,
         isError: true,
         refetch: vi.fn(),
-      } as any);
+      } as unknown as ReturnType<typeof apiSlice.useGetExchangeRatesQuery>);
     });
 
     it('falls back to default static USD_TO_RATES and base USD when rates are undefined', () => {
@@ -183,14 +183,14 @@ describe('useCurrency', () => {
         isLoading: true,
         isError: false,
         refetch: vi.fn(),
-      } as any);
+      } as unknown as ReturnType<typeof apiSlice.useGetCurrenciesQuery>);
 
       mockGetExchangeRates.mockReturnValue({
         data: undefined,
         isLoading: false,
         isError: false,
         refetch: vi.fn(),
-      } as any);
+      } as unknown as ReturnType<typeof apiSlice.useGetExchangeRatesQuery>);
 
       const { result } = renderHook(() => useCurrency());
 

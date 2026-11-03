@@ -7,7 +7,6 @@ describe('tripSchema validation', () => {
     location: 'Kyoto, Japan',
     startDate: '2026-10-15',
     endDate: '2026-10-25',
-    status: 'planned',
     budgetLimit: 3000,
     currency: 'USD',
     coverImageUrl: 'https://images.unsplash.com/photo-kyoto',
@@ -86,7 +85,7 @@ describe('tripSchema validation', () => {
     it('coerces string representations of numbers to numeric values', () => {
       const result = tripSchema.safeParse({
         ...validTrip,
-        budgetLimit: '2500' as any,
+        budgetLimit: '2500',
       });
       expect(result.success).toBe(true);
       if (result.success) {
@@ -95,13 +94,13 @@ describe('tripSchema validation', () => {
     });
 
     it('coerces empty string, null, or undefined to undefined', () => {
-      const withEmptyStr = tripSchema.safeParse({ ...validTrip, budgetLimit: '' as any });
+      const withEmptyStr = tripSchema.safeParse({ ...validTrip, budgetLimit: '' });
       expect(withEmptyStr.success).toBe(true);
       if (withEmptyStr.success) {
         expect(withEmptyStr.data.budgetLimit).toBeUndefined();
       }
 
-      const withNull = tripSchema.safeParse({ ...validTrip, budgetLimit: null as any });
+      const withNull = tripSchema.safeParse({ ...validTrip, budgetLimit: null });
       expect(withNull.success).toBe(true);
       if (withNull.success) {
         expect(withNull.data.budgetLimit).toBeUndefined();

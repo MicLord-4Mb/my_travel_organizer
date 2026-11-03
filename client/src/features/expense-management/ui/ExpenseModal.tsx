@@ -10,12 +10,11 @@ import {
   ShoppingBag,
   CreditCard,
   Save,
-  ChevronDown,
   CheckCircle,
 } from 'lucide-react';
-import { Dialog, Button, useToast } from '@shared/ui';
+import { Dialog, Button, Input, Select, useToast } from '@shared/ui';
 import type { Expense, Trip, PlaceEvent } from '@shared/types/models';
-import { expenseSchema, type ExpenseFormData } from '../model/expenseSchema';
+import { expenseSchema, type ExpenseFormData } from '@features/expense-management/model/expenseSchema';
 import { useCurrency } from '@shared/lib/useCurrency';
 import { toDateInputValue, parseLocalDate, addDaysLocalDate, inclusiveDayCount, formatLocalDate } from '@shared/lib/date';
 import { normalizeCategory, type NormalizedExpenseCategory, PAYMENT_METHOD_OPTIONS } from '@entities/expense';
@@ -43,45 +42,38 @@ const CATEGORIES: Array<{
   key: NormalizedExpenseCategory;
   label: string;
   icon: React.ReactNode;
-  color: string;
 }> = [
-    {
-      key: 'transport',
-      label: 'Transport',
-      icon: <Plane size={20} color="#3B82F6" />,
-      color: '#3B82F6',
-    },
-    {
-      key: 'lodging',
-      label: 'Lodging',
-      icon: <Hotel size={20} color="#8B5CF6" />,
-      color: '#8B5CF6',
-    },
-    {
-      key: 'dining',
-      label: 'Dining',
-      icon: <Utensils size={20} color="#F59E0B" />,
-      color: '#F59E0B',
-    },
-    {
-      key: 'activities',
-      label: 'Activities',
-      icon: <Ticket size={20} color="#10B981" />,
-      color: '#10B981',
-    },
-    {
-      key: 'shopping',
-      label: 'Shopping',
-      icon: <ShoppingBag size={20} color="#EC4899" />,
-      color: '#EC4899',
-    },
-    {
-      key: 'other',
-      label: 'Other',
-      icon: <CreditCard size={20} color="#64748B" />,
-      color: '#64748B',
-    },
-  ];
+  {
+    key: 'transport',
+    label: 'Transport',
+    icon: <Plane size={20} color="var(--color-category-transport)" />,
+  },
+  {
+    key: 'lodging',
+    label: 'Lodging',
+    icon: <Hotel size={20} color="var(--color-category-lodging)" />,
+  },
+  {
+    key: 'dining',
+    label: 'Dining',
+    icon: <Utensils size={20} color="var(--color-category-dining)" />,
+  },
+  {
+    key: 'activities',
+    label: 'Activities',
+    icon: <Ticket size={20} color="var(--color-category-activities)" />,
+  },
+  {
+    key: 'shopping',
+    label: 'Shopping',
+    icon: <ShoppingBag size={20} color="var(--color-category-shopping)" />,
+  },
+  {
+    key: 'other',
+    label: 'Other',
+    icon: <CreditCard size={20} color="var(--color-category-other)" />,
+  },
+];
 
 /**
  * Dialog for creating or modifying financial expenses and receipts.
@@ -90,6 +82,7 @@ const CATEGORIES: Array<{
  * - Category picker with color-coded iconography.
  * - Dynamic live FX currency converter preview.
  * - Association of expenses with specific itinerary events or trip days.
+ * - Shared `<Input />` and `<Select />` primitives with automatic `aria-describedby` / `aria-invalid`.
  * - Toast feedback upon submission.
  */
 export const ExpenseModal: React.FC<ExpenseModalProps> = ({
@@ -103,11 +96,8 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   const isEditing = Boolean(expenseToEdit);
   const { toast } = useToast();
   const { convert, format, currencies, symbols, baseCurrency } = useCurrency();
-  const titleId = useId();
-  const descId = useId();
-  const amountId = useId();
-  const notesId = useId();
   const categoryGroupId = useId();
+  const categoryErrorId = `${categoryGroupId}-error`;
 
   const [initialDate] = useState(() => toDateInputValue(new Date()));
 
@@ -199,13 +189,13 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       toast({
         title: 'Success',
         description: isEditing ? 'Expense updated' : 'Expense logged',
-        variant: 'success'
+        variant: 'success',
       });
     } catch (err) {
       toast({
         title: 'Error',
         description: err instanceof Error ? err.message : 'Failed to save expense',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -216,6 +206,24 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   const approxConverted = isDifferentCurrency
     ? convert(Number(selectedAmount) || 0, selectedCurrency, targetConversionCurrency)
     : null;
+
+  const currencyOptions = useMemo(() => {
+    if (currencies.length > 0) {
+      return currencies.map((c) => ({
+        value: c.code,
+        label: `${c.code} (${c.symbol}) - ${c.name}`,
+      }));
+    }
+    return [{ value: selectedCurrency, label: selectedCurrency }];
+  }, [currencies, selectedCurrency]);
+
+  const placeOptions = useMemo(
+    () => [
+      { value: '', label: 'No linked place' },
+      ...events.map((evt) => ({ value: evt.id, label: evt.title })),
+    ],
+    [events]
+  );
 
   return (
     <Dialog
@@ -256,72 +264,63 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
     >
       <form
         id="expense-form"
+        noValidate
         className={styles.form}
         onSubmit={handleSubmit(handleFormSubmit)}
       >
         {/* Description / Merchant */}
-        <div className={styles.fieldGroup}>
-          <div className={styles.labelRow}>
-            <label htmlFor={titleId} className={styles.label}>
-              Description / Merchant <span className={styles.required}>*</span>
-            </label>
-            {!errors.title && (
-              <span style={{ fontSize: 11, color: '#10B981', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Input
+          label="Description / Merchant"
+          required
+          placeholder="e.g., Dinner at Roppongi Robata or Shibuya Sky"
+          error={errors.title?.message}
+          labelRight={
+            !errors.title ? (
+              <span className={styles.validatedBadge}>
                 <CheckCircle size={12} /> Validated
               </span>
-            )}
-          </div>
-          <div className={styles.inputWrapper}>
-            <input
-              id={titleId}
-              type="text"
-              placeholder="e.g., Dinner at Roppongi Robata or Shibuya Sky"
-              className={`${styles.input} ${errors.title ? styles.inputError : ''}`}
-              {...register('title')}
-            />
-          </div>
-          {errors.title && <span className={styles.errorText}>{errors.title.message}</span>}
-        </div>
+            ) : undefined
+          }
+          {...register('title')}
+        />
 
         {/* Amount & Currency */}
         <div className={styles.fieldGroup}>
-          <label htmlFor={amountId} className={styles.label}>
-            Amount &amp; Currency <span className={styles.required}>*</span>
-          </label>
           <div className={styles.amountGrid}>
-            <div className={styles.inputWrapper}>
-              <span className={styles.currencyPrefix}>
-                {symbols[selectedCurrency] || selectedCurrency}
-              </span>
-              <input
-                id={amountId}
-                type="number"
-                step="0.01"
-                min="0.01"
-                placeholder="0.00"
-                className={`${styles.input} ${styles.amountInput} ${errors.amount ? styles.inputError : ''}`}
-                {...register('amount')}
-              />
-            </div>
-            <div className={styles.selectWrapper}>
-              <select className={styles.select} {...register('currency')}>
-                {currencies.map(c => (
-                  <option key={c.code} value={c.code}>{c.code} ({c.symbol}) - {c.name}</option>
-                ))}
-              </select>
-              <span className={styles.selectChevron}>
-                <ChevronDown size={16} />
-              </span>
-            </div>
+            <Input
+              label="Amount"
+              required
+              type="number"
+              step="0.01"
+              min="0.01"
+              placeholder="0.00"
+              leftIcon={
+                <span className={styles.currencyPrefix}>
+                  {symbols[selectedCurrency] || selectedCurrency}
+                </span>
+              }
+              className={styles.amountInput}
+              error={errors.amount?.message}
+              {...register('amount')}
+            />
+            <Select
+              label="Currency"
+              options={currencyOptions}
+              error={errors.currency?.message}
+              {...register('currency')}
+            />
           </div>
-          {errors.amount && <span className={styles.errorText}>{errors.amount.message}</span>}
           {isDifferentCurrency && approxConverted !== null && (
             <div className={styles.fxHint}>
               <span>
                 Approx. {format(approxConverted, targetConversionCurrency)}
               </span>
               <span>
-                FX Rate: 1 {selectedCurrency} = {format(convert(1, selectedCurrency, targetConversionCurrency), targetConversionCurrency)}
+                FX Rate: 1 {selectedCurrency} ={' '}
+                {format(
+                  convert(1, selectedCurrency, targetConversionCurrency),
+                  targetConversionCurrency
+                )}
               </span>
             </div>
           )}
@@ -329,13 +328,14 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
         {/* Category Picker (Interactive Cards) */}
         <div className={styles.fieldGroup}>
-          <label id={categoryGroupId} className={styles.label}>
+          <span id={categoryGroupId} className={styles.label}>
             Category <span className={styles.required}>*</span>
-          </label>
+          </span>
           <div
             className={styles.categoryGrid}
             role="radiogroup"
             aria-labelledby={categoryGroupId}
+            aria-describedby={errors.category ? categoryErrorId : undefined}
           >
             {CATEGORIES.map((cat, idx) => {
               const isSelected = selectedCategory === cat.key;
@@ -370,95 +370,56 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             })}
           </div>
           {errors.category && (
-            <span className={styles.errorText}>{errors.category.message}</span>
+            <span id={categoryErrorId} className={styles.errorText} role="alert">
+              {errors.category.message}
+            </span>
           )}
         </div>
 
         {/* Associated Day & Payment Method */}
         <div className={styles.twoColGrid}>
-          <div className={styles.fieldGroup}>
-            <label className={styles.label} htmlFor={descId}>
-              Associated Day
-            </label>
-            <div className={styles.selectWrapper}>
-              <select id={descId} className={styles.select} {...register('dayIndex')}>
-                {daysList.map((d) => (
-                  <option key={d.value} value={d.value}>
-                    {d.label}
-                  </option>
-                ))}
-              </select>
-              <span className={styles.selectChevron}>
-                <ChevronDown size={16} />
-              </span>
-            </div>
-          </div>
+          <Select
+            label="Associated Day"
+            options={daysList}
+            error={errors.dayIndex?.message}
+            {...register('dayIndex')}
+          />
 
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>Payment Method</label>
-            <div className={styles.selectWrapper}>
-              <select className={styles.select} {...register('paymentMethod')}>
-                {PAYMENT_METHOD_OPTIONS.map((pm) => (
-                  <option key={pm.value} value={pm.value}>
-                    {pm.label}
-                  </option>
-                ))}
-              </select>
-              <span className={styles.selectChevron}>
-                <ChevronDown size={16} />
-              </span>
-            </div>
-          </div>
+          <Select
+            label="Payment Method"
+            options={PAYMENT_METHOD_OPTIONS}
+            error={errors.paymentMethod?.message}
+            {...register('paymentMethod')}
+          />
         </div>
 
         {/* Date & Optional Place */}
         <div className={styles.twoColGrid}>
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>Transaction Date</label>
-            <input
-              type="date"
-              className={styles.input}
-              {...register('date')}
-            />
-            {errors.date && <span className={styles.errorText}>{errors.date.message}</span>}
-          </div>
+          <Input
+            label="Transaction Date"
+            type="date"
+            error={errors.date?.message}
+            {...register('date')}
+          />
 
           {events.length > 0 && (
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Linked Itinerary Place</label>
-              <div className={styles.selectWrapper}>
-                <select className={styles.select} {...register('placeEventId')}>
-                  <option value="">No linked place</option>
-                  {events.map((evt) => (
-                    <option key={evt.id} value={evt.id}>
-                      {evt.title}
-                    </option>
-                  ))}
-                </select>
-                <span className={styles.selectChevron}>
-                  <ChevronDown size={16} />
-                </span>
-              </div>
-            </div>
+            <Select
+              label="Linked Itinerary Place"
+              options={placeOptions}
+              error={errors.placeEventId?.message}
+              {...register('placeEventId')}
+            />
           )}
         </div>
 
         {/* Notes & Memo */}
-        <div className={styles.fieldGroup}>
-          <label htmlFor={notesId} className={styles.label}>
-            Receipt &amp; Notes
-          </label>
-          <div className={styles.noteInputRow}>
-            <input
-              id={notesId}
-              type="text"
-              placeholder="Optional memo, booking reference or tax-free notes..."
-              className={styles.input}
-              {...register('notes')}
-            />
-          </div>
-          {errors.notes && <span className={styles.errorText}>{errors.notes.message}</span>}
-        </div>
+        <Input
+          label="Receipt & Notes"
+          type="text"
+          placeholder="Optional memo, booking reference or tax-free notes..."
+          error={errors.notes?.message}
+          {...register('notes')}
+        />
       </form>
     </Dialog>
   );

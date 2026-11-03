@@ -4,14 +4,14 @@
  * Path: docs/architecture/02-domain-models.md
  *
  * Strict data contracts. Every entity is prepared
- * for relational database structures and geo-integrations. 
+ * for relational database structures and geo-integrations.
  */
 
 export type EntityId = string; // UUID v4
 
 // --- Base Interfaces ---
 export interface AuditableEntity {
-	id: EntityId; 
+	id: EntityId;
 	createdAt: string; // ISO 8601
 	updatedAt: string; // ISO 8601
 }
@@ -20,18 +20,19 @@ export interface AuditableEntity {
 export type TripStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
 
 export interface Trip extends AuditableEntity {
-	title: string; 
-	description?: string; 
+	title: string;
+	description?: string;
 	startDate: string; // YYYY-MM-DD
 	endDate: string; // YYYY-MM-DD
-	coverImageUrl?: string; 
-	status: TripStatus; 
-	budgetLimit?: number; 
+	coverImageUrl?: string;
+	/**
+	 * Derived dynamically from `startDate`, `endDate`, and today's calendar date
+	 * (`calculateTripStatus`). Only `cancelled` is a persisted manual override.
+	 */
+	status: TripStatus;
+	budgetLimit?: number; // Undefined = unconstrained trip
 	currency: string; // ISO 4217 (e.g., 'USD', 'EUR', 'ILS')
 	location?: string;
-	spentBudget?: number;
-	packedCount?: number;
-	totalChecklistCount?: number;
 	categoryBudgets?: Partial<Record<string, number>>;
 }
 
@@ -39,49 +40,58 @@ export interface Trip extends AuditableEntity {
 export type EventCategory = 'transport' | 'lodging' | 'activities' | 'dining';
 
 export interface PlaceEvent extends AuditableEntity {
-	tripId: EntityId; 
+	tripId: EntityId;
 	dayIndex: number; // 0, 1, 2... relative to start date
-	order: number; // Index for Drag & Drop
-	title: string; 
+	order: number; // Gapless index (0, 1, 2...) for Drag & Drop within a day
+	title: string;
 	category?: EventCategory;
-	notes?: string; 
+	notes?: string;
 	location?: {
-		name: string; 
+		name: string;
 		address?: string;
-		lat?: number; 
-		lng?: number; 
-	}; 
+		lat?: number;
+		lng?: number;
+	};
 	startTime?: string; // HH:mm
-	endTime?: string; // HH:mm
+	endTime?: string; // HH:mm (may be < startTime for overnight crossings)
 	cost?: number;
 	currency?: string;
 	bookingRef?: string;
 }
 
 export interface DaySchedule {
-	dayIndex: number; 
+	dayIndex: number;
 	date: string; // Calculated dynamically: startDate + dayIndex
 	events: PlaceEvent[];
 }
 
 // --- Finances and Budget ---
-export type ExpenseCategory =
+/**
+ * Canonical expense categories used across UI, analytics, and forms.
+ *
+ * @deprecated Legacy aliases `'accommodation'` (-> `'lodging'`), `'food'` (-> `'dining'`),
+ * and `'insurance'` (-> `'other'`) are normalized on read by `normalizeCategory` for
+ * backward compatibility with older records, and must not be emitted by new writes.
+ */
+export type CanonicalExpenseCategory =
 	| 'transport'
 	| 'lodging'
 	| 'dining'
 	| 'activities'
 	| 'shopping'
-	| 'insurance'
-	| 'other'
-	| 'accommodation'
-	| 'food';
+	| 'other';
+
+/** @deprecated Legacy category aliases normalized at runtime by `normalizeCategory`. */
+export type LegacyExpenseCategoryAlias = 'accommodation' | 'food' | 'insurance';
+
+export type ExpenseCategory = CanonicalExpenseCategory | LegacyExpenseCategoryAlias;
 
 export interface Expense extends AuditableEntity {
-	tripId: EntityId; 
-	amount: number; 
-	currency: string; 
-	category: ExpenseCategory; 
-	title: string; 
+	tripId: EntityId;
+	amount: number;
+	currency: string;
+	category: ExpenseCategory;
+	title: string;
 	date: string; // ISO Date YYYY-MM-DD
 	placeEventId?: EntityId; // Optional link to a specific place
 	paymentMethod?: string; // e.g., 'Card', 'Cash', 'Apple Pay'
@@ -102,11 +112,11 @@ export type ChecklistCategory =
 	| 'tasks';
 
 export interface ChecklistItem extends AuditableEntity {
-	tripId: EntityId; 
-	title: string; 
+	tripId: EntityId;
+	title: string;
 	type?: ChecklistType;
-	category: ChecklistCategory; 
-	isCompleted: boolean; 
+	category: ChecklistCategory;
+	isCompleted: boolean;
 	priority?: ChecklistPriority;
 	quantity?: number;
 	assignedDayIndex?: number; // Optional task for a specific day
@@ -114,11 +124,11 @@ export interface ChecklistItem extends AuditableEntity {
 
 // --- Filters and Sorting ---
 export interface TripFilterParams {
-	searchQuery?: string; 
-	status?: TripStatus | 'all'; 
-	startDateFrom?: string; 
-	startDateTo?: string; 
-	sortBy?: 'startDate' | 'createdAt' | 'title'; 
+	searchQuery?: string;
+	status?: TripStatus | 'all';
+	startDateFrom?: string;
+	startDateTo?: string;
+	sortBy?: 'startDate' | 'createdAt' | 'title';
 	sortDirection?: 'asc' | 'desc';
 }
 ```

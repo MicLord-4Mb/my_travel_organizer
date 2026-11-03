@@ -6,7 +6,7 @@ import type { Trip } from '@shared/types/models';
 /**
  * Resolution status of the active trip.
  */
-export type ActiveTripStatus = 'loading' | 'ready' | 'not_found' | 'no_trips';
+export type ActiveTripStatus = 'loading' | 'error' | 'ready' | 'not_found' | 'no_trips';
 
 /**
  * Return signature of the `useActiveTrip` hook.
@@ -46,6 +46,11 @@ export function useActiveTrip(explicitTripId?: string | null): UseActiveTripResu
       return { activeTrip: null, status: 'loading' as const };
     }
 
+    // A failed request must never be mistaken for an empty collection.
+    if (isError && !trips.length) {
+      return { activeTrip: null, status: 'error' as const };
+    }
+
     if (!trips.length) {
       return { activeTrip: null, status: 'no_trips' as const };
     }
@@ -60,7 +65,7 @@ export function useActiveTrip(explicitTripId?: string | null): UseActiveTripResu
 
     // Default to the first trip if no ID is specified in the route
     return { activeTrip: trips[0], status: 'ready' as const };
-  }, [trips, isLoading, targetId]);
+  }, [trips, isLoading, isError, targetId]);
 
   return {
     activeTrip,
